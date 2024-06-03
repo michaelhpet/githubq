@@ -10,9 +10,10 @@ export default function Home() {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!username) return setError("Please enter a GitHub username or URL");
     const match = username.match(GITHUB_USERNAME_REGEX);
     if (!match || !match.groups)
-      return setError("Please enter a valid username");
+      return setError("Please enter a valid username or URL");
     navigate(`/${match.groups.username}`);
   };
 
