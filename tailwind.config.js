@@ -8,6 +8,8 @@ export default {
         foreground: "rgb(var(--foreground))",
         background: "rgb(var(--background))",
         stroke: "rgb(var(--stroke))",
+        accent: "rgb(var(--accent))",
+        dim: "rgb(var(--dim))",
       },
       fontFamily: {
         heading: ["'Source Serif 4', system-ui, serif"],
