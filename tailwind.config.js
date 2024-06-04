@@ -7,6 +7,8 @@ export default {
       colors: {
         foreground: "rgb(var(--foreground))",
         background: "rgb(var(--background))",
+        dark: "rgb(var(--dark))",
+        paper: "rgb(var(--paper))",
         stroke: "rgb(var(--stroke))",
         accent: "rgb(var(--accent))",
         dim: "rgb(var(--dim))",
