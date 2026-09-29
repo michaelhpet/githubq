@@ -7,7 +7,7 @@ import { WebApps } from "./web-apps";
 
 export function Profile() {
 	const SECTIONS = [
-		{ label: "Developer", component: <Developer /> },
+		{ component: <Developer /> },
 		{ label: "Web apps", component: <WebApps /> },
 		{ label: "Top repositories", component: <Repositories /> },
 		{ label: "Languages", component: <Languages /> },
@@ -18,7 +18,7 @@ export function Profile() {
 		<div className="flex flex-col">
 			{SECTIONS.map((section) => (
 				<section key={section.label} className="flex flex-col gap-4 p-4">
-					<Tag>{section.label}</Tag>
+					{!!section.label && <Tag>{section.label}</Tag>}
 					{section.component}
 				</section>
 			))}

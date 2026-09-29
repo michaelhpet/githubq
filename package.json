@@ -14,10 +14,12 @@
 		"@tanstack/react-query": "^5.104.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"react-router-dom": "^6.23.1"
+		"react-router-dom": "^6.23.1",
+		"tailwind-merge": "^3.7.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.14",
+		"@tanstack/react-query-devtools": "^5.104.0",
 		"@types/react": "^18.2.66",
 		"@types/react-dom": "^18.2.22",
 		"@vitejs/plugin-react": "^4.2.1",

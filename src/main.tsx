@@ -11,6 +11,12 @@ import { AppLayout } from "./layouts";
 import { Home } from "./pages/home";
 import { Profile } from "./pages/profile";
 
+const ReactQueryDevtools = React.lazy(() =>
+	import("@tanstack/react-query-devtools").then((m) => ({
+		default: m.ReactQueryDevtools,
+	})),
+);
+
 const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
@@ -40,6 +46,11 @@ ReactDOM.createRoot(rootElement).render(
 					{ path: "*", element: <Navigate to="/" /> },
 				])}
 			/>
+			{!!import.meta.env.DEV && (
+				<React.Suspense fallback={null}>
+					<ReactQueryDevtools initialIsOpen={false} />
+				</React.Suspense>
+			)}
 		</QueryClientProvider>
 	</React.StrictMode>,
 );
