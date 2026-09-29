@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import Switch from "@/components/switch";
+import { Switch } from "@/components/switch";
 
 function getInitialIsDark(): boolean {
 	if (typeof window === "undefined") return false;
@@ -7,7 +7,7 @@ function getInitialIsDark(): boolean {
 	return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-export default function ThemeSwitch() {
+export function ThemeSwitch() {
 	const [isDark, setIsDark] = useState(getInitialIsDark);
 	const switchId = useId();
 

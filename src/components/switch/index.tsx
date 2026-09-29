@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from "react";
 
-export default function Switch(props: InputHTMLAttributes<HTMLInputElement>) {
+export function Switch(props: InputHTMLAttributes<HTMLInputElement>) {
 	return (
 		<span
 			className={`relative w-8 flex p-1 rounded-full border border-stroke transition-all ${

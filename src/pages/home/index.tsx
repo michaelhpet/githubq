@@ -1,9 +1,9 @@
 import { type FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Button from "@/components/button";
+import { Button } from "@/components/button";
 import { GITHUB_USERNAME_REGEX } from "@/lib/constants";
 
-export default function Home() {
+export function Home() {
 	const navigate = useNavigate();
 	const [username, setUsername] = useState("");
 	const [error, setError] = useState("");

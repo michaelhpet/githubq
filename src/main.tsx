@@ -7,9 +7,9 @@ import {
 	Navigate,
 	RouterProvider,
 } from "react-router-dom";
-import AppLayout from "./layouts";
-import Home from "./pages/home";
-import Profile from "./pages/profile";
+import { AppLayout } from "./layouts";
+import { Home } from "./pages/home";
+import { Profile } from "./pages/profile";
 
 const queryClient = new QueryClient({
 	defaultOptions: {

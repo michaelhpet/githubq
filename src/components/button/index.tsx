@@ -4,7 +4,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 	variant?: "contained" | "outlined";
 };
 
-export default function Button(props: Props) {
+export function Button(props: Props) {
 	const { variant = "contained", className = "", ...domProps } = props;
 
 	const classNameToken: Record<typeof variant, string> = {

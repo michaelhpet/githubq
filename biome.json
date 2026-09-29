@@ -15,7 +15,10 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"preset": "recommended"
+			"preset": "recommended",
+			"style": {
+				"noDefaultExport": "error"
+			}
 		}
 	},
 	"javascript": {
@@ -24,6 +27,16 @@
 		}
 	},
 	"overrides": [
+		{
+			"includes": ["*.config.*"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		},
 		{
 			"includes": ["src/assets/styles/**"],
 			"linter": {

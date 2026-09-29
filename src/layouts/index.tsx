@@ -1,8 +1,8 @@
 import { Link, Outlet } from "react-router-dom";
 import githubqIcon from "@/assets/icons/githubq-icon.svg";
-import ThemeSwitch from "@/components/theme-switch";
+import { ThemeSwitch } from "@/components/theme-switch";
 
-export default function AppLayout() {
+export function AppLayout() {
 	return (
 		<>
 			<header className="w-full min-h-16 flex items-center border-b-[3px] border-stroke">

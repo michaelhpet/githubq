@@ -1,11 +1,9 @@
-type Props = {
-	label: string;
-};
+import type { PropsWithChildren } from "react";
 
-export default function Tag(props: Props) {
+export function Tag(props: PropsWithChildren) {
 	return (
 		<span className="self-start flex items-center px-2 py-1 rounded-lg bg-paper text-sm text-dim">
-			{props.label}
+			{props.children}
 		</span>
 	);
 }
