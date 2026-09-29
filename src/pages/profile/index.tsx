@@ -1,8 +1,10 @@
-import Button from "@/components/button";
-import Tag from "@/components/tag";
-import dp from "@/assets/images/profile-photo.png";
+import { useParams } from "react-router-dom";
 import appIcon from "@/assets/icons/githubq-icon.svg";
 import linkIcon from "@/assets/icons/link-icon.svg";
+import dp from "@/assets/images/profile-photo.png";
+import Button from "@/components/button";
+import Tag from "@/components/tag";
+import { useProfile } from "@/lib/api/get-profile";
 
 export default function Profile() {
   const SECTIONS = [
@@ -26,15 +28,24 @@ export default function Profile() {
 }
 
 function DeveloperSection() {
+  const { username } = useParams();
+  const { data } = useProfile(username);
+
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-start gap-2">
-        <img src={dp} alt="" className="w-20 h-20 rounded-lg" />
+        <img
+          src={data?.avatar_url ?? dp}
+          alt={data?.login ?? "Profile photo"}
+          className="w-20 h-20 rounded-lg"
+        />
         <article className="flex flex-col">
-          <p className="font-bold">Michael Peter</p>
+          <p className="font-bold">
+            {data?.name ?? data?.login ?? "Michael Peter"}
+          </p>
           <p className="max-w-64 text-sm text-dim">
-            I'm committed to building appealing apps and helping people learn
-            how to code.
+            {data?.bio ??
+              "I'm committed to building appealing apps and helping people learn how to code."}
           </p>
           <div className="flex items-center"></div>
         </article>

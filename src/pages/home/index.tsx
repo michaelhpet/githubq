@@ -1,7 +1,7 @@
+import { type FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "@/components/button";
 import { GITHUB_USERNAME_REGEX } from "@/lib/constants";
-import { FormEvent, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -12,8 +12,7 @@ export default function Home() {
     e.preventDefault();
     if (!username) return setError("Please enter a GitHub username or URL");
     const match = username.match(GITHUB_USERNAME_REGEX);
-    if (!match || !match.groups)
-      return setError("Please enter a valid username or URL");
+    if (!match?.groups) return setError("Please enter a valid username or URL");
     navigate(`/${match.groups.username}`);
   };
 

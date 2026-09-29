@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Switch from "@/components/switch";
 
 function getInitialIsDark(): boolean {
@@ -9,6 +9,7 @@ function getInitialIsDark(): boolean {
 
 export default function ThemeSwitch() {
   const [isDark, setIsDark] = useState(getInitialIsDark);
+  const switchId = useId();
 
   useEffect(() => {
     if (isDark) {
@@ -22,11 +23,13 @@ export default function ThemeSwitch() {
 
   return (
     <label
+      htmlFor={switchId}
       className="flex items-center gap-2 cursor-pointer select-none"
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
       <span aria-hidden="true">{isDark ? "🌙" : "☀️"}</span>
       <Switch
+        id={switchId}
         checked={isDark}
         onChange={(e) => setIsDark(e.target.checked)}
         aria-label="Toggle dark mode"
