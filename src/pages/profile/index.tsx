@@ -80,7 +80,7 @@ function Webapps() {
       {APPS.map((app) => (
         <div
           key={app.name}
-          className="flex flex-col gap-2 p-2 rounded-lg border-2 border-stroke shadow"
+          className="flex flex-col gap-2 p-2 rounded-lg border-2 border-stroke bg-background shadow"
         >
           <div className="flex items-center gap-2">
             <img src={appIcon} alt={`${app.name} icon`} className="w-8 h-8" />
