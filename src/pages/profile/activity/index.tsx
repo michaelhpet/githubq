@@ -1,0 +1,130 @@
+import { useParams } from "react-router-dom";
+import { Skeleton } from "@/components/skeleton";
+import {
+	buildContributionWindow,
+	getActivityPatterns,
+	getExternalMergedPRs,
+	getWorkTypeBreakdown,
+} from "@/lib/activity/stats";
+import { useActivity } from "@/lib/api/get-activity";
+import { useRepoStats } from "@/lib/api/get-repo-stats";
+import { useRepositories } from "@/lib/api/get-repositories";
+import { useAllTimeMergedPRs, useLifetimeCounts } from "@/lib/api/search";
+import { aggregateYearlySeries, pickTopRepos } from "@/lib/repos/stats";
+import { ActivityHighlights } from "./activity-highlights";
+import { ContributionMatrix } from "./contribution-matrix";
+import { OpenSourceReach } from "./open-source-reach";
+import { WorkTypeRadar } from "./work-type-radar";
+import { YearOverview } from "./year-overview";
+
+function ActivitySkeleton() {
+	return (
+		<div className="flex flex-col gap-4">
+			<Skeleton className="h-32 w-full" />
+			<Skeleton className="h-64 w-full" />
+			<div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+				<Skeleton className="h-20 w-full" />
+				<Skeleton className="h-20 w-full" />
+				<Skeleton className="h-20 w-full" />
+			</div>
+		</div>
+	);
+}
+
+export function Activity() {
+	const { username } = useParams();
+	const {
+		data: events,
+		isLoading: eventsLoading,
+		isError: eventsError,
+		error: eventsFetchError,
+	} = useActivity(username);
+	const { data: repos } = useRepositories(username);
+	const topRepos = repos ? pickTopRepos(repos) : [];
+	const { data: repoStats, isLoading: repoStatsLoading } = useRepoStats(
+		topRepos.map((repo) => repo.full_name),
+	);
+	const { data: lifetime } = useLifetimeCounts(username);
+	const { data: allTimePRs, isLoading: allTimePRsLoading } =
+		useAllTimeMergedPRs(username);
+
+	if (eventsLoading) return <ActivitySkeleton />;
+	if (eventsError) {
+		return (
+			<p className="text-sm font-medium text-red-500">
+				🚫&nbsp;
+				{eventsFetchError instanceof Error
+					? eventsFetchError.message
+					: "Could not load activity"}
+			</p>
+		);
+	}
+
+	const hasEvents = !!events && events.length > 0;
+	const activityWindow = hasEvents ? buildContributionWindow(events) : null;
+	const breakdown = hasEvents ? getWorkTypeBreakdown(events) : null;
+	const patterns = hasEvents ? getActivityPatterns(events) : null;
+	const externalPRs = hasEvents
+		? getExternalMergedPRs(events, username ?? "")
+		: [];
+	const yearlySeries = aggregateYearlySeries(
+		(repoStats ?? []).map((stat) => stat?.participation?.owner),
+	);
+	const yearlyTotal = yearlySeries.reduce((sum, count) => sum + count, 0);
+
+	return (
+		<div className="flex flex-col gap-6">
+			{(repoStatsLoading || yearlyTotal > 0) && (
+				<article className="flex flex-col gap-2">
+					<h3 className="text-lg font-bold">Past year</h3>
+					<p className="text-sm text-dim">
+						Commits to own top repositories · past 52 weeks
+					</p>
+					{repoStatsLoading ? (
+						<Skeleton className="h-24 w-full" />
+					) : (
+						<YearOverview series={yearlySeries} />
+					)}
+				</article>
+			)}
+			{hasEvents && activityWindow && breakdown && patterns ? (
+				<>
+					<article className="flex flex-col gap-2">
+						<h3 className="text-lg font-bold">
+							{activityWindow.total} contributions
+						</h3>
+						{activityWindow.start && activityWindow.end && (
+							<p className="text-sm text-dim">
+								Based on public activity · {activityWindow.start} –{" "}
+								{activityWindow.end}
+							</p>
+						)}
+						<ContributionMatrix days={activityWindow.days} />
+					</article>
+					<article className="flex flex-col gap-2">
+						<h3 className="text-lg font-bold">Breakdown of work type</h3>
+						<WorkTypeRadar breakdown={breakdown} lifetime={lifetime ?? null} />
+					</article>
+					<article className="flex flex-col gap-2">
+						<h3 className="text-lg font-bold">Highlights</h3>
+						<ActivityHighlights patterns={patterns} />
+					</article>
+				</>
+			) : (
+				<p className="text-sm text-dim">
+					No public activity in this window for{" "}
+					<span className="font-medium">{username}</span>.
+				</p>
+			)}
+			<article className="flex flex-col gap-2">
+				<h3 className="text-lg font-bold">Open source reach</h3>
+				<OpenSourceReach
+					recent={externalPRs}
+					allTime={allTimePRs?.items ?? []}
+					allTimeTotal={allTimePRs?.total ?? null}
+					allTimeLoading={allTimePRsLoading}
+				/>
+			</article>
+		</div>
+	);
+}
