@@ -63,7 +63,7 @@ export function Repositories() {
 					return (
 						<div
 							key={repo.full_name}
-							className="flex flex-col gap-2 rounded-lg border border-stroke bg-background p-2 shadow"
+							className="flex flex-col gap-2 rounded-lg border border-stroke bg-background p-2"
 						>
 							<div className="flex items-center justify-between gap-2">
 								<a
