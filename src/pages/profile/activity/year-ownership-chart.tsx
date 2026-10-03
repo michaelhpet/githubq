@@ -1,6 +1,7 @@
 import {
 	Bar,
 	BarChart,
+	CartesianGrid,
 	Legend,
 	ResponsiveContainer,
 	Tooltip,
@@ -56,6 +57,11 @@ export function YearOwnershipChart({ data }: { data: YearOwnership[] }) {
 					layout="vertical"
 					margin={{ top: 0, right: 8, bottom: 0, left: 8 }}
 				>
+					<CartesianGrid
+						stroke="currentColor"
+						strokeOpacity={0.15}
+						vertical={false}
+					/>
 					<XAxis
 						type="number"
 						tick={{ fill: "currentColor", fontSize: 12 }}

@@ -1,4 +1,12 @@
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	Cell,
+	ResponsiveContainer,
+	Tooltip,
+	YAxis,
+} from "recharts";
 import { formatDay } from "@/lib/format";
 
 function YearTooltip({
@@ -44,6 +52,12 @@ export function YearOverview({ series }: { series: number[] }) {
 			<div className="h-36 w-full text-dim">
 				<ResponsiveContainer width="100%" height="100%">
 					<BarChart data={weeks} barCategoryGap="25%">
+						<CartesianGrid
+							stroke="currentColor"
+							strokeOpacity={0.15}
+							vertical={false}
+						/>
+						<YAxis hide domain={[0, "dataMax"]} />
 						<Tooltip
 							cursor={{ fill: "currentColor", fillOpacity: 0.15 }}
 							content={<YearTooltip />}

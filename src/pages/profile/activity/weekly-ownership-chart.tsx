@@ -1,10 +1,12 @@
 import {
 	Bar,
 	BarChart,
+	CartesianGrid,
 	Legend,
 	ResponsiveContainer,
 	Tooltip,
 	XAxis,
+	YAxis,
 } from "recharts";
 import type { WeeklyOwnership } from "@/lib/activity/stats";
 
@@ -46,6 +48,12 @@ export function WeeklyOwnershipChart({ data }: { data: WeeklyOwnership[] }) {
 		<div className="min-h-56 w-full flex-1 text-dim">
 			<ResponsiveContainer width="100%" height="100%">
 				<BarChart data={data} barCategoryGap="15%">
+					<CartesianGrid
+						stroke="currentColor"
+						strokeOpacity={0.15}
+						vertical={false}
+					/>
+					<YAxis hide />
 					<XAxis
 						dataKey="week"
 						tick={{ fill: "currentColor", fontSize: 11 }}

@@ -4,6 +4,8 @@ import { useRepoStats } from "@/lib/api/get-repo-stats";
 import { useRepositories } from "@/lib/api/get-repositories";
 import { pickTopRepos } from "@/lib/repos/stats";
 
+const compactCount = new Intl.NumberFormat("default", { notation: "compact" });
+
 function RepositoriesSkeleton() {
 	return (
 		<div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3">
@@ -34,7 +36,7 @@ export function Repositories() {
 	);
 
 	if (isLoading) return <RepositoriesSkeleton />;
-	if (isError) {
+	if (isError && !repos) {
 		return (
 			<p className="text-sm font-medium text-red-500">
 				🚫&nbsp;
@@ -71,9 +73,15 @@ export function Repositories() {
 								>
 									{repo.name}
 								</a>
-								<p className="shrink-0 text-xs text-dim">
-									⭐ {repo.stargazers_count} · 🍴 {repo.forks_count}
-								</p>
+								{(repo.stargazers_count > 0 || repo.forks_count > 0) && (
+									<p className="shrink-0 text-xs text-dim">
+										{repo.stargazers_count > 0 &&
+											`⭐ ${compactCount.format(repo.stargazers_count)}`}
+										{repo.stargazers_count > 0 && repo.forks_count > 0 && " · "}
+										{repo.forks_count > 0 &&
+											`🍴 ${compactCount.format(repo.forks_count)}`}
+									</p>
+								)}
 							</div>
 							<p className="line-clamp-2 min-h-10 text-sm text-dim">
 								{repo.description ?? "No description"}
