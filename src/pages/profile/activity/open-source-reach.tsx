@@ -72,7 +72,7 @@ export function OpenSourceReach({
 						: "in this window · external only"}
 				</span>
 			</p>
-			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 print:grid-cols-2">
 				{split.length > 0 && (
 					<div className="flex flex-col gap-2">
 						<div className="h-52 w-full text-dim">

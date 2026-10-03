@@ -45,11 +45,11 @@ export function Developer() {
 					</>
 				)}
 			</div>
-			<div className="flex items-center gap-2">
+			<div className="flex items-center gap-2 print:hidden">
 				<Button variant="outlined" onClick={() => void auditAgain()}>
 					Audit again
 				</Button>
-				<Button>Download</Button>
+				<Button onClick={() => window.print()}>Download</Button>
 			</div>
 		</div>
 	);
