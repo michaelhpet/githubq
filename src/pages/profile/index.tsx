@@ -1,15 +1,15 @@
 import { Tag } from "@/components/tag";
 import { Activity } from "./activity";
 import { Developer } from "./developer";
-import { Languages } from "./languages";
+import { Leadership } from "./leadership";
 import { Repositories } from "./repositories";
 
 export function Profile() {
 	const SECTIONS = [
 		{ id: "profile", component: <Developer /> },
 		{ id: "work", label: "Work", component: <Activity /> },
+		{ id: "leadership", label: "Leadership", component: <Leadership /> },
 		{ id: "repos", label: "Top repositories", component: <Repositories /> },
-		{ id: "languages", label: "Languages", component: <Languages /> },
 	];
 
 	return (

@@ -70,6 +70,221 @@ export function aggregateYearlySeries(
 	return totals;
 }
 
+export interface LanguageInsights {
+	primary: { language: string; percent: number } | null;
+	count: number;
+	mostStarred: { language: string; stars: number } | null;
+	mostRecent: { language: string; pushedAt: string } | null;
+}
+
+/**
+ * Headline facts about language usage: top language by bytes, how many
+ * languages appear at all, which language earned the most stars, and which
+ * was pushed most recently.
+ */
+export function getLanguageInsights(
+	repos: GithubRepo[],
+	shares: LanguageShare[],
+): LanguageInsights {
+	const stars = new Map<string, number>();
+	const pushed = new Map<string, string>();
+	for (const repo of repos) {
+		if (!repo.language) continue;
+		stars.set(
+			repo.language,
+			(stars.get(repo.language) ?? 0) + repo.stargazers_count,
+		);
+		if (
+			!pushed.has(repo.language) ||
+			repo.pushed_at > (pushed.get(repo.language) as string)
+		) {
+			pushed.set(repo.language, repo.pushed_at);
+		}
+	}
+	let mostStarred: LanguageInsights["mostStarred"] = null;
+	for (const [language, starCount] of stars) {
+		if (!mostStarred || starCount > mostStarred.stars) {
+			mostStarred = { language, stars: starCount };
+		}
+	}
+	let mostRecent: LanguageInsights["mostRecent"] = null;
+	for (const [language, pushedAt] of pushed) {
+		if (!mostRecent || pushedAt > mostRecent.pushedAt) {
+			mostRecent = { language, pushedAt };
+		}
+	}
+	return {
+		primary: shares[0]
+			? { language: shares[0].language, percent: shares[0].percent }
+			: null,
+		count: shares.length,
+		mostStarred,
+		mostRecent,
+	};
+}
+
+export interface EcosystemSlice {
+	subject: string;
+	value: number;
+}
+
+const FRONTEND_TOPICS = new Set([
+	"react",
+	"vue",
+	"angular",
+	"svelte",
+	"nextjs",
+	"nuxt",
+	"gatsby",
+	"remix",
+	"tailwind",
+	"tailwindcss",
+	"css",
+	"sass",
+	"scss",
+	"frontend",
+	"typescript",
+	"javascript",
+	"html",
+	"ui",
+	"design-system",
+	"web",
+	"spa",
+	"pwa",
+	"vite",
+]);
+
+const BACKEND_TOPICS = new Set([
+	"node",
+	"nodejs",
+	"express",
+	"fastify",
+	"django",
+	"flask",
+	"fastapi",
+	"rails",
+	"laravel",
+	"spring",
+	"api",
+	"rest",
+	"graphql",
+	"backend",
+	"server",
+	"database",
+	"postgres",
+	"postgresql",
+	"mysql",
+	"sqlite",
+	"mongodb",
+	"redis",
+	"microservices",
+]);
+
+const DEVOPS_TOPICS = new Set([
+	"docker",
+	"kubernetes",
+	"k8s",
+	"terraform",
+	"ansible",
+	"ci",
+	"cd",
+	"cicd",
+	"github-actions",
+	"devops",
+	"monitoring",
+	"observability",
+	"prometheus",
+	"grafana",
+	"infrastructure",
+	"iac",
+	"helm",
+	"deployment",
+	"cloud",
+	"aws",
+	"gcp",
+	"azure",
+	"nginx",
+	"sre",
+]);
+
+const SYSTEMS_TOPICS = new Set([
+	"rust",
+	"c",
+	"cpp",
+	"c++",
+	"zig",
+	"kernel",
+	"linux",
+	"embedded",
+	"firmware",
+	"operating-system",
+	"compiler",
+	"wasm",
+	"webassembly",
+	"networking",
+]);
+
+const LANGUAGE_ECOSYSTEM: Record<string, string> = {
+	TypeScript: "Frontend",
+	JavaScript: "Frontend",
+	CSS: "Frontend",
+	HTML: "Frontend",
+	Vue: "Frontend",
+	Svelte: "Frontend",
+	Python: "Backend",
+	Ruby: "Backend",
+	PHP: "Backend",
+	Java: "Backend",
+	Kotlin: "Backend",
+	Go: "Backend",
+	"C#": "Backend",
+	Scala: "Backend",
+	Elixir: "Backend",
+	Rust: "Systems",
+	C: "Systems",
+	"C++": "Systems",
+	Zig: "Systems",
+	Haskell: "Systems",
+	Shell: "DevOps",
+	Dockerfile: "DevOps",
+	HCL: "DevOps",
+};
+
+const ECOSYSTEM_SUBJECTS = ["Frontend", "Backend", "DevOps", "Systems"];
+
+/**
+ * Balance across ecosystem areas, counting each repo once per matching
+ * area. Repo topics decide first; the primary language is the fallback
+ * for untagged repos.
+ */
+export function classifyEcosystem(repos: GithubRepo[]): EcosystemSlice[] {
+	const counts: Record<string, number> = {
+		Frontend: 0,
+		Backend: 0,
+		DevOps: 0,
+		Systems: 0,
+	};
+	for (const repo of repos) {
+		const matched = new Set<string>();
+		for (const topic of repo.topics ?? []) {
+			const normalized = topic.toLowerCase();
+			if (FRONTEND_TOPICS.has(normalized)) matched.add("Frontend");
+			if (BACKEND_TOPICS.has(normalized)) matched.add("Backend");
+			if (DEVOPS_TOPICS.has(normalized)) matched.add("DevOps");
+			if (SYSTEMS_TOPICS.has(normalized)) matched.add("Systems");
+		}
+		if (matched.size === 0 && repo.language) {
+			const bucket = LANGUAGE_ECOSYSTEM[repo.language];
+			if (bucket) matched.add(bucket);
+		}
+		for (const bucket of matched) counts[bucket] += 1;
+	}
+	return ECOSYSTEM_SUBJECTS.map((subject) => ({
+		subject,
+		value: counts[subject],
+	}));
+}
+
 export function topCollaborators(
 	allContributors: (RepoContributor[] | null | undefined)[],
 	username: string,

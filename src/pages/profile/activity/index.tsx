@@ -5,6 +5,7 @@ import {
 	getActivityPatterns,
 	getExternalMergedPRs,
 	getWeeklyOwnership,
+	getWorkHabitMatrix,
 	getWorkTypeBreakdown,
 } from "@/lib/activity/stats";
 import { useActivity } from "@/lib/api/get-activity";
@@ -12,10 +13,18 @@ import { useYearContributions } from "@/lib/api/get-contributions";
 import { useRepoStats } from "@/lib/api/get-repo-stats";
 import { useRepositories } from "@/lib/api/get-repositories";
 import { useAllTimeMergedPRs, useLifetimeCounts } from "@/lib/api/search";
-import { aggregateYearlySeries, pickTopRepos } from "@/lib/repos/stats";
+import {
+	aggregateLanguages,
+	aggregateYearlySeries,
+	classifyEcosystem,
+	getLanguageInsights,
+	pickTopRepos,
+} from "@/lib/repos/stats";
 import { ActivityHighlights } from "./activity-highlights";
 import { ContributionMatrix } from "./contribution-matrix";
+import { LanguagesEcosystem } from "./languages-ecosystem";
 import { OpenSourceReach, OpenSourceReachSkeleton } from "./open-source-reach";
+import { WorkHabitGraph } from "./work-habit-graph";
 import { WorkTypeRadar } from "./work-type-radar";
 import { YearOverview } from "./year-overview";
 
@@ -35,6 +44,13 @@ function ActivitySkeleton() {
 			<div className="flex flex-col gap-2">
 				<Skeleton className="h-7 w-52" />
 				<Skeleton className="h-72 w-full" />
+			</div>
+			<div className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-56" />
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<Skeleton className="h-32 w-full" />
+					<Skeleton className="h-64 w-full" />
+				</div>
 			</div>
 			<div className="flex flex-col gap-2">
 				<Skeleton className="h-7 w-36" />
@@ -73,7 +89,7 @@ export function Activity() {
 	const { data: yearData } = useYearContributions(username);
 
 	if (eventsLoading) return <ActivitySkeleton />;
-	if (eventsError) {
+	if (eventsError && !events) {
 		return (
 			<p className="text-sm font-medium text-red-500">
 				🚫&nbsp;
@@ -117,6 +133,11 @@ export function Activity() {
 		(repoStats ?? []).map((stat) => stat?.participation?.owner),
 	);
 	const yearlyTotal = yearlySeries.reduce((sum, count) => sum + count, 0);
+	const languageShares = aggregateLanguages(
+		(repoStats ?? []).map((stat) => stat?.languages),
+	);
+	const ecosystem = classifyEcosystem(topRepos);
+	const languageInsights = getLanguageInsights(topRepos, languageShares);
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -157,6 +178,10 @@ export function Activity() {
 						<h3 className="text-lg font-bold">Highlights</h3>
 						<ActivityHighlights patterns={patterns} />
 					</article>
+					<article className="flex flex-col gap-2">
+						<h3 className="text-lg font-bold">Work habits</h3>
+						<WorkHabitGraph cells={getWorkHabitMatrix(events)} />
+					</article>
 				</>
 			) : (
 				!matrix && (
@@ -165,6 +190,23 @@ export function Activity() {
 						<span className="font-medium">{username}</span>.
 					</p>
 				)
+			)}
+			{(repoStatsLoading || languageShares.length > 0) && (
+				<article className="flex flex-col gap-2">
+					<h3 className="text-lg font-bold">Languages & ecosystem</h3>
+					{repoStatsLoading ? (
+						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+							<Skeleton className="h-32 w-full" />
+							<Skeleton className="h-64 w-full" />
+						</div>
+					) : (
+						<LanguagesEcosystem
+							shares={languageShares}
+							ecosystem={ecosystem}
+							insights={languageInsights}
+						/>
+					)}
+				</article>
 			)}
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Open source reach</h3>
