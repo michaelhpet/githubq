@@ -114,7 +114,7 @@ export interface ActivityPatterns {
 	longestStreak: number;
 }
 
-function formatHour(hour: number): string {
+export function formatHour(hour: number): string {
 	const suffix = hour < 12 ? "AM" : "PM";
 	const twelve = hour % 12 === 0 ? 12 : hour % 12;
 	return `${twelve} ${suffix}`;
@@ -248,6 +248,69 @@ export function getWeeklyOwnership(
 		week: formatDay(start),
 		...counts,
 	}));
+}
+
+export interface WorkHabitPoint {
+	label: string;
+	value: number;
+}
+
+export interface WorkHabitData {
+	hourly: WorkHabitPoint[];
+	daily: WorkHabitPoint[];
+}
+
+/** Raw hour-of-day and day-of-week distributions (viewer-local time). */
+export function getWorkHabitData(events: GithubEvent[]): WorkHabitData {
+	const hourCounts = new Array<number>(24).fill(0);
+	const weekdayCounts = new Array<number>(7).fill(0);
+	for (const event of events) {
+		const at = new Date(event.created_at);
+		hourCounts[at.getHours()] += 1;
+		weekdayCounts[at.getDay()] += 1;
+	}
+	return {
+		hourly: hourCounts.map((value, hour) => ({
+			label: formatHour(hour),
+			value,
+		})),
+		daily: WEEKDAYS.map((day, i) => ({
+			label: day.slice(0, 3),
+			value: weekdayCounts[i],
+		})),
+	};
+}
+
+export interface WorkHabitCell {
+	day: string;
+	hour: number;
+	hourLabel: string;
+	count: number;
+}
+
+/**
+ * Full hour × weekday matrix (viewer-local time), including zero cells so
+ * the grid layout stays stable. Powers the punchcard-style bubble chart.
+ */
+export function getWorkHabitMatrix(events: GithubEvent[]): WorkHabitCell[] {
+	const counts = new Map<string, number>();
+	for (const event of events) {
+		const at = new Date(event.created_at);
+		const key = `${at.getDay()}-${at.getHours()}`;
+		counts.set(key, (counts.get(key) ?? 0) + 1);
+	}
+	const cells: WorkHabitCell[] = [];
+	for (let day = 0; day < 7; day++) {
+		for (let hour = 0; hour < 24; hour++) {
+			cells.push({
+				day: WEEKDAYS[day].slice(0, 3),
+				hour,
+				hourLabel: formatHour(hour),
+				count: counts.get(`${day}-${hour}`) ?? 0,
+			});
+		}
+	}
+	return cells;
 }
 
 export interface ExternalPullRequest {
