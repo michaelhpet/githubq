@@ -15,19 +15,40 @@ import { useAllTimeMergedPRs, useLifetimeCounts } from "@/lib/api/search";
 import { aggregateYearlySeries, pickTopRepos } from "@/lib/repos/stats";
 import { ActivityHighlights } from "./activity-highlights";
 import { ContributionMatrix } from "./contribution-matrix";
-import { OpenSourceReach } from "./open-source-reach";
+import { OpenSourceReach, OpenSourceReachSkeleton } from "./open-source-reach";
 import { WorkTypeRadar } from "./work-type-radar";
 import { YearOverview } from "./year-overview";
 
 function ActivitySkeleton() {
 	return (
-		<div className="flex flex-col gap-4">
-			<Skeleton className="h-32 w-full" />
-			<Skeleton className="h-64 w-full" />
-			<div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
-				<Skeleton className="h-20 w-full" />
-				<Skeleton className="h-20 w-full" />
-				<Skeleton className="h-20 w-full" />
+		<div className="flex flex-col gap-6">
+			<div className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-48" />
+				<Skeleton className="h-5 w-72" />
+				<Skeleton className="h-[168px] w-full" />
+			</div>
+			<div className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-64" />
+				<Skeleton className="h-5 w-80" />
+				<Skeleton className="h-36 w-full" />
+			</div>
+			<div className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-52" />
+				<Skeleton className="h-72 w-full" />
+			</div>
+			<div className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-36" />
+				<div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+				</div>
+			</div>
+			<div className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-44" />
+				<OpenSourceReachSkeleton />
 			</div>
 		</div>
 	);
@@ -106,7 +127,7 @@ export function Activity() {
 						Commits to own top repositories · past 52 weeks
 					</p>
 					{repoStatsLoading ? (
-						<Skeleton className="h-24 w-full" />
+						<Skeleton className="h-[168px] w-full" />
 					) : (
 						<YearOverview series={yearlySeries} />
 					)}

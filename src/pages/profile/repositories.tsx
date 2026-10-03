@@ -7,9 +7,9 @@ import { pickTopRepos } from "@/lib/repos/stats";
 function RepositoriesSkeleton() {
 	return (
 		<div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3">
-			<Skeleton className="h-32 w-full" />
-			<Skeleton className="h-32 w-full" />
-			<Skeleton className="h-32 w-full" />
+			<Skeleton className="h-28 w-full" />
+			<Skeleton className="h-28 w-full" />
+			<Skeleton className="h-28 w-full" />
 		</div>
 	);
 }

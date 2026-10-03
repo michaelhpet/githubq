@@ -14,8 +14,9 @@ export function Developer() {
 	if (isLoading) return <DeveloperSkeleton />;
 
 	async function auditAgain(): Promise<void> {
+		await queryClient.cancelQueries();
+		queryClient.removeQueries();
 		await clearPersistedCache();
-		await queryClient.invalidateQueries();
 	}
 
 	return (

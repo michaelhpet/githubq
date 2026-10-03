@@ -13,6 +13,25 @@ interface Item {
 	url: string;
 }
 
+export function OpenSourceReachSkeleton() {
+	return (
+		<div className="flex flex-col gap-2">
+			<Skeleton className="h-5 w-56" />
+			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+				<div className="flex flex-col gap-2">
+					<Skeleton className="h-52 w-full" />
+					<Skeleton className="h-4 w-40" />
+				</div>
+				<div className="flex flex-col gap-2">
+					<Skeleton className="h-16 w-full" />
+					<Skeleton className="h-16 w-full" />
+					<Skeleton className="h-16 w-full" />
+				</div>
+			</div>
+		</div>
+	);
+}
+
 export function OpenSourceReach({
 	recent,
 	allTime,
@@ -42,12 +61,7 @@ export function OpenSourceReach({
 				}));
 
 	if (allTimeLoading && items.length === 0) {
-		return (
-			<div className="flex flex-col gap-2">
-				<Skeleton className="h-10 w-full" />
-				<Skeleton className="h-10 w-full" />
-			</div>
-		);
+		return <OpenSourceReachSkeleton />;
 	}
 	if (allTimeTotal === null && items.length === 0) {
 		return (
