@@ -20,7 +20,7 @@ export function Developer() {
 	}
 
 	return (
-		<div className="flex items-start justify-between gap-3">
+		<div className="flex flex-col-reverse items-start justify-between gap-3 md:flex-row">
 			<div className="flex items-center gap-2">
 				{isError ? (
 					<p className="text-sm font-medium text-red-500">
@@ -58,7 +58,7 @@ export function Developer() {
 
 function DeveloperSkeleton() {
 	return (
-		<div className="flex items-start justify-between gap-3">
+		<div className="flex flex-col-reverse items-start justify-between gap-3 md:flex-row">
 			<div className="flex items-center gap-2">
 				<Skeleton className="h-20 w-20 rounded-lg" />
 				<article className="flex flex-col gap-1">

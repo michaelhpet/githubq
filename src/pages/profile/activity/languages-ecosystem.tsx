@@ -102,7 +102,7 @@ export function LanguagesEcosystem({
 					<LanguageStrip shares={shares} />
 					<p className="text-xs text-dim">By bytes across top repositories.</p>
 				</div>
-				<div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
+				<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
 					<Insight
 						label="Primary language"
 						value={insights.primary ? insights.primary.language : "—"}

@@ -8,7 +8,7 @@ const compactCount = new Intl.NumberFormat("default", { notation: "compact" });
 
 function RepositoriesSkeleton() {
 	return (
-		<div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3">
+		<div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-3">
 			<Skeleton className="h-28 w-full" />
 			<Skeleton className="h-28 w-full" />
 			<Skeleton className="h-28 w-full" />
