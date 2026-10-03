@@ -1,4 +1,24 @@
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { formatDay } from "@/lib/format";
+
+function YearTooltip({
+	active,
+	payload,
+}: {
+	active?: boolean;
+	payload?: { payload?: { range: string; count: number } }[];
+}) {
+	const datum = payload?.[0]?.payload;
+	if (!active || !datum) return null;
+	return (
+		<div className="rounded-lg border border-stroke bg-paper px-2 py-1 text-xs text-foreground">
+			<p className="font-medium">{datum.range}</p>
+			<p className="text-dim">
+				{datum.count} commit{datum.count === 1 ? "" : "s"}
+			</p>
+		</div>
+	);
+}
 
 export function YearOverview({ series }: { series: number[] }) {
 	const total = series.reduce((sum, count) => sum + count, 0);
@@ -11,8 +31,13 @@ export function YearOverview({ series }: { series: number[] }) {
 	}
 	const now = Date.now();
 	const weeks = series.map((count, i) => {
-		const at = new Date(now - (51 - i) * 7 * 24 * 60 * 60 * 1000);
-		return { week: at.toISOString().slice(0, 10), count };
+		const start = now - (51 - i) * 7 * 24 * 60 * 60 * 1000;
+		const end = start + 6 * 24 * 60 * 60 * 1000;
+		return {
+			week: new Date(start).toISOString().slice(0, 10),
+			range: `${formatDay(start)} – ${formatDay(end)}`,
+			count,
+		};
 	});
 	return (
 		<div className="flex flex-col gap-2">
@@ -21,17 +46,7 @@ export function YearOverview({ series }: { series: number[] }) {
 					<BarChart data={weeks} barCategoryGap="25%">
 						<Tooltip
 							cursor={{ fill: "currentColor", fillOpacity: 0.15 }}
-							contentStyle={{
-								backgroundColor: "rgb(var(--paper))",
-								border: "1px solid rgb(var(--stroke))",
-								borderRadius: 8,
-								fontSize: 12,
-							}}
-							labelFormatter={(week) => `Week of ${String(week)}`}
-							formatter={(count) => [
-								`${typeof count === "number" ? count : 0} commits`,
-								"",
-							]}
+							content={<YearTooltip />}
 						/>
 						<Bar dataKey="count" radius={[2, 2, 0, 0]}>
 							{weeks.map((week) => (
