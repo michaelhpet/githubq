@@ -6,9 +6,17 @@ import { useProfile } from "@/lib/api/get-profile";
 
 export function Developer() {
 	const { username } = useParams();
-	const { data, isLoading } = useProfile(username);
+	const { data, isLoading, isError, error } = useProfile(username);
 
 	if (isLoading) return <DeveloperSkeleton />;
+	if (isError) {
+		return (
+			<p className="text-sm font-medium text-red-500">
+				🚫&nbsp;
+				{error instanceof Error ? error.message : "Could not load profile"}
+			</p>
+		);
+	}
 
 	return (
 		<div className="flex items-start justify-between gap-3">

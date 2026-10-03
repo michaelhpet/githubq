@@ -1,5 +1,5 @@
-import { useEffect, useId, useState } from "react";
-import { Switch } from "@/components/switch";
+import { IconMoon, IconSun } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 function getInitialIsDark(): boolean {
 	if (typeof window === "undefined") return false;
@@ -9,7 +9,6 @@ function getInitialIsDark(): boolean {
 
 export function ThemeSwitch() {
 	const [isDark, setIsDark] = useState(getInitialIsDark);
-	const switchId = useId();
 
 	useEffect(() => {
 		if (isDark) {
@@ -22,18 +21,14 @@ export function ThemeSwitch() {
 	}, [isDark]);
 
 	return (
-		<label
-			htmlFor={switchId}
-			className="flex items-center gap-2 cursor-pointer select-none"
+		<button
+			type="button"
+			onClick={() => setIsDark((dark) => !dark)}
 			title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+			aria-label="Toggle dark mode"
+			className="flex h-9 w-9 items-center justify-center rounded-md border-2 border-transparent bg-transparent text-foreground transition hover:border-stroke"
 		>
-			<span aria-hidden="true">{isDark ? "🌙" : "☀️"}</span>
-			<Switch
-				id={switchId}
-				checked={isDark}
-				onChange={(e) => setIsDark(e.target.checked)}
-				aria-label="Toggle dark mode"
-			/>
-		</label>
+			{isDark ? <IconMoon size={20} /> : <IconSun size={20} />}
+		</button>
 	);
 }

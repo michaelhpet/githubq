@@ -23,17 +23,11 @@ function AuthButton() {
 					title={viewer.login}
 					className="h-8 w-8 rounded-full border border-stroke"
 				/>
-				<Button variant="outlined" onClick={logout}>
-					Logout
-				</Button>
+				<Button onClick={logout}>Logout</Button>
 			</div>
 		);
 	}
-	return (
-		<Button variant="outlined" onClick={login}>
-			Login with GitHub
-		</Button>
-	);
+	return <Button onClick={login}>Login with GitHub</Button>;
 }
 
 export function AppLayout() {
@@ -46,8 +40,8 @@ export function AppLayout() {
 						<p className="text-2xl font-bold">githubq</p>
 					</Link>
 					<div className="flex items-center gap-2">
-						<AuthButton />
 						<ThemeSwitch />
+						<AuthButton />
 					</div>
 				</nav>
 			</header>

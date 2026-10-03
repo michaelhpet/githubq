@@ -109,6 +109,9 @@ export interface ActivityPatterns {
 	busiestDay: string | null;
 	peakHours: string | null;
 	workingStyle: WorkingStyle;
+	activeDays: number;
+	longestStreak: number;
+	topRepo: string | null;
 }
 
 function formatHour(hour: number): string {
@@ -128,15 +131,28 @@ function isMorningHour(hour: number): boolean {
 export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 	const weekdayCounts = new Array<number>(7).fill(0);
 	const hourCounts = new Array<number>(24).fill(0);
+	const daySet = new Set<number>();
+	const repoCounts = new Map<string, number>();
 	for (const event of events) {
 		// Local time of the viewer, so "active hours" read naturally.
 		const at = new Date(event.created_at);
 		weekdayCounts[at.getDay()] += 1;
 		hourCounts[at.getHours()] += 1;
+		daySet.add(
+			new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime(),
+		);
+		repoCounts.set(event.repo.name, (repoCounts.get(event.repo.name) ?? 0) + 1);
 	}
 	const total = events.length;
 	if (total === 0) {
-		return { busiestDay: null, peakHours: null, workingStyle: "Steady pace" };
+		return {
+			busiestDay: null,
+			peakHours: null,
+			workingStyle: "Steady pace",
+			activeDays: 0,
+			longestStreak: 0,
+			topRepo: null,
+		};
 	}
 	const busiestDay =
 		WEEKDAYS[weekdayCounts.indexOf(Math.max(...weekdayCounts))];
@@ -173,7 +189,58 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 				? "Early bird"
 				: "Steady pace";
 
-	return { busiestDay, peakHours, workingStyle };
+	const activeDays = daySet.size;
+	const sortedDays = [...daySet].sort((a, b) => a - b);
+	let longestStreak = sortedDays.length > 0 ? 1 : 0;
+	let run = longestStreak;
+	for (let i = 1; i < sortedDays.length; i++) {
+		if (sortedDays[i] - sortedDays[i - 1] === 24 * 60 * 60 * 1000) {
+			run += 1;
+			longestStreak = Math.max(longestStreak, run);
+		} else {
+			run = 1;
+		}
+	}
+	let topRepo: string | null = null;
+	let topRepoCount = 0;
+	for (const [repo, count] of repoCounts) {
+		if (count > topRepoCount) {
+			topRepoCount = count;
+			topRepo = repo;
+		}
+	}
+
+	return {
+		busiestDay,
+		peakHours,
+		workingStyle,
+		activeDays,
+		longestStreak,
+		topRepo,
+	};
+}
+
+export interface RepoOwnershipSplit {
+	name: string;
+	value: number;
+}
+
+/** Share of recent events in the user's own repos vs external repos. */
+export function getRepoOwnershipSplit(
+	events: GithubEvent[],
+	username: string,
+): RepoOwnershipSplit[] {
+	const owner = username.toLowerCase();
+	let own = 0;
+	let external = 0;
+	for (const event of events) {
+		if (event.repo.name.split("/")[0].toLowerCase() === owner) own += 1;
+		else external += 1;
+	}
+	return [
+		{ name: "Own repositories", value: own },
+		{ name: "External repositories", value: external },
+	].filter((entry) => entry.value > 0);
 }
 
 export interface ExternalPullRequest {

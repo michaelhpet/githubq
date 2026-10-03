@@ -4,9 +4,11 @@ import {
 	buildContributionWindow,
 	getActivityPatterns,
 	getExternalMergedPRs,
+	getRepoOwnershipSplit,
 	getWorkTypeBreakdown,
 } from "@/lib/activity/stats";
 import { useActivity } from "@/lib/api/get-activity";
+import { useYearContributions } from "@/lib/api/get-contributions";
 import { useRepoStats } from "@/lib/api/get-repo-stats";
 import { useRepositories } from "@/lib/api/get-repositories";
 import { useAllTimeMergedPRs, useLifetimeCounts } from "@/lib/api/search";
@@ -47,6 +49,7 @@ export function Activity() {
 	const { data: lifetime } = useLifetimeCounts(username);
 	const { data: allTimePRs, isLoading: allTimePRsLoading } =
 		useAllTimeMergedPRs(username);
+	const { data: yearData } = useYearContributions(username);
 
 	if (eventsLoading) return <ActivitySkeleton />;
 	if (eventsError) {
@@ -67,6 +70,28 @@ export function Activity() {
 	const externalPRs = hasEvents
 		? getExternalMergedPRs(events, username ?? "")
 		: [];
+	const ownershipSplit = hasEvents
+		? getRepoOwnershipSplit(events, username ?? "")
+		: [];
+	// Authenticated users get the true yearly calendar; everyone else
+	// falls back to the trailing public-events window.
+	const matrix = yearData
+		? {
+				total: yearData.total,
+				days: yearData.days,
+				start: yearData.start,
+				end: yearData.end,
+				caption: "Public contributions",
+			}
+		: activityWindow
+			? {
+					total: activityWindow.total,
+					days: activityWindow.days,
+					start: activityWindow.start,
+					end: activityWindow.end,
+					caption: "Based on public activity",
+				}
+			: null;
 	const yearlySeries = aggregateYearlySeries(
 		(repoStats ?? []).map((stat) => stat?.participation?.owner),
 	);
@@ -87,20 +112,22 @@ export function Activity() {
 					)}
 				</article>
 			)}
-			{hasEvents && activityWindow && breakdown && patterns ? (
+			{matrix ? (
+				<article className="flex flex-col gap-2">
+					<h3 className="text-lg font-bold">
+						{matrix.total} contributions
+						{yearData ? " in the past year" : ""}
+					</h3>
+					{matrix.start && matrix.end && (
+						<p className="text-sm text-dim">
+							{matrix.caption} · {matrix.start} – {matrix.end}
+						</p>
+					)}
+					<ContributionMatrix days={matrix.days} />
+				</article>
+			) : null}
+			{hasEvents && breakdown && patterns ? (
 				<>
-					<article className="flex flex-col gap-2">
-						<h3 className="text-lg font-bold">
-							{activityWindow.total} contributions
-						</h3>
-						{activityWindow.start && activityWindow.end && (
-							<p className="text-sm text-dim">
-								Based on public activity · {activityWindow.start} –{" "}
-								{activityWindow.end}
-							</p>
-						)}
-						<ContributionMatrix days={activityWindow.days} />
-					</article>
 					<article className="flex flex-col gap-2">
 						<h3 className="text-lg font-bold">Breakdown of work type</h3>
 						<WorkTypeRadar breakdown={breakdown} lifetime={lifetime ?? null} />
@@ -111,10 +138,12 @@ export function Activity() {
 					</article>
 				</>
 			) : (
-				<p className="text-sm text-dim">
-					No public activity in this window for{" "}
-					<span className="font-medium">{username}</span>.
-				</p>
+				!matrix && (
+					<p className="text-sm text-dim">
+						No public activity in this window for{" "}
+						<span className="font-medium">{username}</span>.
+					</p>
+				)
 			)}
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Open source reach</h3>
@@ -123,6 +152,7 @@ export function Activity() {
 					allTime={allTimePRs?.items ?? []}
 					allTimeTotal={allTimePRs?.total ?? null}
 					allTimeLoading={allTimePRsLoading}
+					split={ownershipSplit}
 				/>
 			</article>
 		</div>
