@@ -30,7 +30,6 @@ export function ActivityHighlights({
 					label="Longest streak"
 					value={`${patterns.longestStreak} day${patterns.longestStreak === 1 ? "" : "s"}`}
 				/>
-				<Highlight label="Top repo" value={patterns.topRepo ?? "—"} />
 			</div>
 			<p className="text-xs text-dim">Times shown in your local timezone.</p>
 		</div>

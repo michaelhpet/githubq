@@ -1,43 +1,54 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/button";
 import { Skeleton } from "@/components/skeleton";
 import { Tag } from "@/components/tag";
 import { useProfile } from "@/lib/api/get-profile";
+import { clearPersistedCache } from "@/lib/query-client";
 
 export function Developer() {
 	const { username } = useParams();
+	const queryClient = useQueryClient();
 	const { data, isLoading, isError, error } = useProfile(username);
 
 	if (isLoading) return <DeveloperSkeleton />;
-	if (isError) {
-		return (
-			<p className="text-sm font-medium text-red-500">
-				🚫&nbsp;
-				{error instanceof Error ? error.message : "Could not load profile"}
-			</p>
-		);
+
+	async function auditAgain(): Promise<void> {
+		await clearPersistedCache();
+		await queryClient.invalidateQueries();
 	}
 
 	return (
 		<div className="flex items-start justify-between gap-3">
 			<div className="flex items-center gap-2">
-				<img
-					src={data?.avatar_url}
-					alt={data?.login ?? "Profile photo"}
-					className="w-20 h-20 rounded-lg"
-				/>
-				<article className="flex flex-col">
-					<Tag size="small">{username}</Tag>
-					<p className="font-bold">
-						{data?.name ?? data?.login ?? "Anonymous"}
+				{isError ? (
+					<p className="text-sm font-medium text-red-500">
+						🚫&nbsp;
+						{error instanceof Error ? error.message : "Could not load profile"}
 					</p>
-					<p className="max-w-64 text-sm text-dim truncate">
-						{data?.bio ?? "-"}
-					</p>
-				</article>
+				) : (
+					<>
+						<img
+							src={data?.avatar_url}
+							alt={data?.login ?? "Profile photo"}
+							className="w-20 h-20 rounded-lg"
+						/>
+						<article className="flex flex-col">
+							<Tag size="small">{username}</Tag>
+							<p className="font-bold">
+								{data?.name ?? data?.login ?? "Anonymous"}
+							</p>
+							<p className="max-w-64 text-sm text-dim truncate">
+								{data?.bio ?? "-"}
+							</p>
+						</article>
+					</>
+				)}
 			</div>
 			<div className="flex items-center gap-2">
-				<Button variant="outlined">Audit again</Button>
+				<Button variant="outlined" onClick={() => void auditAgain()}>
+					Audit again
+				</Button>
 				<Button>Download</Button>
 			</div>
 		</div>

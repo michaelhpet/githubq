@@ -87,7 +87,7 @@ export function Repositories() {
 									<div className="flex shrink-0 -space-x-2">
 										{contributors.map((contributor) => (
 											<img
-												key={contributor.login}
+												key={contributor.id || contributor.login}
 												src={contributor.avatar_url}
 												alt={contributor.login || "Contributor"}
 												title={contributor.login || "Contributor"}

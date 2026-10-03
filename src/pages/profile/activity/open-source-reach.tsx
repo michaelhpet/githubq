@@ -72,88 +72,96 @@ export function OpenSourceReach({
 						: "in this window · external only"}
 				</span>
 			</p>
-			{split.length > 0 && (
-				<div className="flex flex-col gap-2">
-					<div className="h-52 w-full text-dim">
-						<ResponsiveContainer width="100%" height="100%">
-							<PieChart>
-								<Pie
-									data={split}
-									dataKey="value"
-									nameKey="name"
-									innerRadius="55%"
-									outerRadius="80%"
-									paddingAngle={2}
-								>
-									{split.map((entry) => (
-										<Cell
-											key={entry.name}
-											fill={
+			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+				{split.length > 0 && (
+					<div className="flex flex-col gap-2">
+						<div className="h-52 w-full text-dim">
+							<ResponsiveContainer width="100%" height="100%">
+								<PieChart>
+									<Pie
+										data={split}
+										dataKey="value"
+										nameKey="name"
+										innerRadius="55%"
+										outerRadius="80%"
+										paddingAngle={2}
+									>
+										{split.map((entry) => (
+											<Cell
+												key={entry.name}
+												fill={
+													entry.name === "Own repositories"
+														? "#0c8ce9"
+														: "#8b949e"
+												}
+											/>
+										))}
+									</Pie>
+									<Tooltip
+										contentStyle={{
+											backgroundColor: "rgb(var(--paper))",
+											border: "1px solid rgb(var(--stroke))",
+											borderRadius: 8,
+											fontSize: 12,
+										}}
+										formatter={(value) => [
+											`${typeof value === "number" ? value : 0} events`,
+											"",
+										]}
+									/>
+								</PieChart>
+							</ResponsiveContainer>
+						</div>
+						<ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
+							{split.map((entry) => (
+								<li key={entry.name} className="flex items-center gap-1">
+									<span
+										aria-hidden="true"
+										className="h-2 w-2 rounded-full"
+										style={{
+											backgroundColor:
 												entry.name === "Own repositories"
 													? "#0c8ce9"
-													: "#8b949e"
-											}
-										/>
-									))}
-								</Pie>
-								<Tooltip
-									contentStyle={{
-										backgroundColor: "rgb(var(--paper))",
-										border: "1px solid rgb(var(--stroke))",
-										borderRadius: 8,
-										fontSize: 12,
-									}}
-									formatter={(value) => [
-										`${typeof value === "number" ? value : 0} events`,
-										"",
-									]}
-								/>
-							</PieChart>
-						</ResponsiveContainer>
+													: "#8b949e",
+										}}
+									/>
+									{entry.name}: {entry.value}
+								</li>
+							))}
+						</ul>
+						<p className="text-xs text-dim">
+							Share of recent activity in own vs external repositories.
+						</p>
 					</div>
-					<ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
-						{split.map((entry) => (
-							<li key={entry.name} className="flex items-center gap-1">
-								<span
-									aria-hidden="true"
-									className="h-2 w-2 rounded-full"
-									style={{
-										backgroundColor:
-											entry.name === "Own repositories" ? "#0c8ce9" : "#8b949e",
-									}}
-								/>
-								{entry.name}: {entry.value}
-							</li>
-						))}
-					</ul>
-					<p className="text-xs text-dim">
-						Share of recent activity in own vs external repositories.
-					</p>
-				</div>
-			)}
-			{allTime.length > 0 && items.length > 0 && (
-				<p className="text-xs text-dim">
-					Most recent in external repositories:
-				</p>
-			)}
-			<ul className="flex flex-col gap-2">
-				{items.map((item) => (
-					<li
-						key={item.key}
-						className="flex flex-col gap-1 rounded-lg border-2 border-stroke bg-background p-2"
-					>
-						<a
-							href={item.url}
-							target="_blank"
-							rel="noreferrer"
-							className="text-sm font-medium hover:underline"
-						>
-							{item.title}
-						</a>
-						<p className="text-xs text-dim">{item.subtitle}</p>
-					</li>
-				))}
-			</ul>
+				)}
+				{items.length > 0 && (
+					<div className="flex flex-col gap-2">
+						{allTime.length > 0 && (
+							<p className="text-xs text-dim">
+								Most recent in external repositories:
+							</p>
+						)}
+						<ul className="flex flex-col gap-2">
+							{items.map((item) => (
+								<li
+									key={item.key}
+									className="flex flex-col gap-1 rounded-lg border-2 border-stroke bg-background p-2"
+								>
+									<a
+										href={item.url}
+										target="_blank"
+										rel="noreferrer"
+										className="text-sm font-medium hover:underline"
+									>
+										{item.title}
+									</a>
+									<p className="text-xs text-dim">{item.subtitle}</p>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }

@@ -111,7 +111,6 @@ export interface ActivityPatterns {
 	workingStyle: WorkingStyle;
 	activeDays: number;
 	longestStreak: number;
-	topRepo: string | null;
 }
 
 function formatHour(hour: number): string {
@@ -132,7 +131,6 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 	const weekdayCounts = new Array<number>(7).fill(0);
 	const hourCounts = new Array<number>(24).fill(0);
 	const daySet = new Set<number>();
-	const repoCounts = new Map<string, number>();
 	for (const event of events) {
 		// Local time of the viewer, so "active hours" read naturally.
 		const at = new Date(event.created_at);
@@ -141,7 +139,6 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 		daySet.add(
 			new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime(),
 		);
-		repoCounts.set(event.repo.name, (repoCounts.get(event.repo.name) ?? 0) + 1);
 	}
 	const total = events.length;
 	if (total === 0) {
@@ -151,7 +148,6 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 			workingStyle: "Steady pace",
 			activeDays: 0,
 			longestStreak: 0,
-			topRepo: null,
 		};
 	}
 	const busiestDay =
@@ -201,22 +197,12 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 			run = 1;
 		}
 	}
-	let topRepo: string | null = null;
-	let topRepoCount = 0;
-	for (const [repo, count] of repoCounts) {
-		if (count > topRepoCount) {
-			topRepoCount = count;
-			topRepo = repo;
-		}
-	}
-
 	return {
 		busiestDay,
 		peakHours,
 		workingStyle,
 		activeDays,
 		longestStreak,
-		topRepo,
 	};
 }
 

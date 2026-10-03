@@ -14,6 +14,7 @@ export interface RepoParticipation {
 }
 
 export interface RepoContributor {
+	id: string;
 	login: string;
 	avatar_url: string;
 	contributions: number;
@@ -47,15 +48,24 @@ export function getRepoParticipation(
 	return fetchRepo<RepoParticipation>(fullName, "stats/participation", token);
 }
 
-export function getRepoContributors(
+function randomId(): string {
+	if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+		return crypto.randomUUID();
+	}
+	return Math.random().toString(36).slice(2);
+}
+
+export async function getRepoContributors(
 	fullName: string,
 	token?: string | null,
 ): Promise<RepoContributor[] | null> {
-	return fetchRepo<RepoContributor[]>(
+	const response = await fetchRepo<RepoContributor[]>(
 		fullName,
 		"contributors?per_page=5&anon=1",
 		token,
 	);
+	// Anonymous contributors have no id — generate one so list keys stay unique.
+	return response?.map((r) => ({ ...r, id: r.id ?? randomId() })) ?? [];
 }
 
 export interface RepoStats {
