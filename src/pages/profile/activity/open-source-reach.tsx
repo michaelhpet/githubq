@@ -19,14 +19,15 @@ export function OpenSourceReachSkeleton() {
 	return (
 		<div className="flex flex-col gap-2">
 			<Skeleton className="h-5 w-56" />
-			<Skeleton className="h-64 w-full" />
 			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+				<Skeleton className="h-64 w-full" />
 				<Skeleton className="h-56 w-full" />
-				<div className="flex flex-col gap-2">
-					<Skeleton className="h-16 w-full" />
-					<Skeleton className="h-16 w-full" />
-					<Skeleton className="h-16 w-full" />
-				</div>
+			</div>
+			<div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+				<Skeleton className="h-16 w-full" />
+				<Skeleton className="h-16 w-full" />
+				<Skeleton className="h-16 w-full" />
+				<Skeleton className="h-16 w-full" />
 			</div>
 		</div>
 	);
@@ -88,46 +89,50 @@ export function OpenSourceReach({
 						: "in this window · external only"}
 				</span>
 			</p>
-			{yearly && (
-				<div className="flex flex-col gap-2">
-					<p className="text-sm font-medium">Past year by contribution type</p>
-					<YearOwnershipChart data={yearly} />
-				</div>
-			)}
 			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 print:grid-cols-2">
-				<div className="flex flex-col gap-2 self-stretch">
-					<p className="text-sm font-medium">Recent weeks</p>
-					<WeeklyOwnershipChart data={weekly} />
-					<p className="text-xs text-dim">Own vs external activity per week.</p>
-				</div>
-				{items.length > 0 && (
+				{yearly && (
 					<div className="flex flex-col gap-2">
-						{allTime.length > 0 && (
-							<p className="text-xs text-dim">
-								Most recent in external repositories:
-							</p>
-						)}
-						<ul className="flex flex-col gap-2">
-							{items.map((item) => (
-								<li
-									key={item.key}
-									className="flex flex-col gap-1 rounded-lg border border-stroke bg-background p-2"
-								>
-									<a
-										href={item.url}
-										target="_blank"
-										rel="noreferrer"
-										className="text-sm font-medium hover:underline"
-									>
-										{item.title}
-									</a>
-									<p className="text-xs text-dim">{item.subtitle}</p>
-								</li>
-							))}
-						</ul>
+						<p className="text-sm font-medium">
+							Past year by contribution type
+						</p>
+						<YearOwnershipChart data={yearly} />
 					</div>
 				)}
+				<div
+					className={`flex flex-col gap-2 self-stretch ${yearly ? "" : "md:col-span-2"}`}
+				>
+					<p className="text-sm font-medium">Recent weeks</p>
+					<p className="text-xs text-dim">Own vs external activity per week.</p>
+					<WeeklyOwnershipChart data={weekly} />
+				</div>
 			</div>
+			{items.length > 0 && (
+				<div className="flex flex-col gap-2">
+					{allTime.length > 0 && (
+						<p className="text-xs text-dim">
+							Most recent in external repositories:
+						</p>
+					)}
+					<ul className="flex flex-col gap-2">
+						{items.map((item) => (
+							<li
+								key={item.key}
+								className="flex flex-col gap-1 rounded-lg border border-stroke bg-background p-2"
+							>
+								<a
+									href={item.url}
+									target="_blank"
+									rel="noreferrer"
+									className="text-sm font-medium hover:underline"
+								>
+									{item.title}
+								</a>
+								<p className="text-xs text-dim">{item.subtitle}</p>
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
 		</div>
 	);
 }
