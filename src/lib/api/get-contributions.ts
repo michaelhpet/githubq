@@ -10,6 +10,13 @@ export interface YearContributions {
 	total: number;
 	start: string | null;
 	end: string | null;
+	ownership: YearOwnership[];
+}
+
+export interface YearOwnership {
+	type: string;
+	own: number;
+	external: number;
 }
 
 interface CalendarDay {
@@ -32,10 +39,47 @@ const CALENDAR_QUERY = `
 						}
 					}
 				}
+				commitContributionsByRepository(first: 100) {
+					contributions { totalCommitContributions }
+					repository { nameWithOwner }
+				}
+				pullRequestContributionsByRepository(first: 100) {
+					contributions { totalPullRequestContributions }
+					repository { nameWithOwner }
+				}
+				issueContributionsByRepository(first: 100) {
+					contributions { totalIssueContributions }
+					repository { nameWithOwner }
+				}
+				pullRequestReviewContributionsByRepository(first: 100) {
+					contributions { totalPullRequestReviewContributions }
+					repository { nameWithOwner }
+				}
 			}
 		}
 	}
 `;
+
+interface RepoContributionEntry {
+	contributions?: Record<string, number> | null;
+	repository?: { nameWithOwner?: string } | null;
+}
+
+function splitOwnership(
+	entries: RepoContributionEntry[] | undefined,
+	totalKey: string,
+	username: string,
+): { own: number; external: number } {
+	let own = 0;
+	let external = 0;
+	for (const entry of entries ?? []) {
+		const count = entry.contributions?.[totalKey] ?? 0;
+		const repoOwner = (entry.repository?.nameWithOwner ?? "/").split("/")[0];
+		if (repoOwner.toLowerCase() === username.toLowerCase()) own += count;
+		else external += count;
+	}
+	return { own, external };
+}
 
 export async function getYearContributions(
 	username: string,
@@ -67,6 +111,10 @@ export async function getYearContributions(
 						totalContributions?: number;
 						weeks?: { contributionDays?: CalendarDay[] }[];
 					};
+					commitContributionsByRepository?: RepoContributionEntry[];
+					pullRequestContributionsByRepository?: RepoContributionEntry[];
+					issueContributionsByRepository?: RepoContributionEntry[];
+					pullRequestReviewContributionsByRepository?: RepoContributionEntry[];
 				};
 			};
 		};
@@ -78,12 +126,34 @@ export async function getYearContributions(
 			res.status,
 		);
 	}
-	const calendar =
-		body.data?.user?.contributionsCollection?.contributionCalendar;
+	const collection = body.data?.user?.contributionsCollection;
+	const calendar = collection?.contributionCalendar;
 	const days = (calendar?.weeks ?? []).flatMap(
 		(week) => week.contributionDays ?? [],
 	);
 	const sorted = [...days].sort((a, b) => (a.date < b.date ? -1 : 1));
+	const ownershipTypes = [
+		{
+			type: "Commits",
+			entries: collection?.commitContributionsByRepository,
+			key: "totalCommitContributions",
+		},
+		{
+			type: "Pull requests",
+			entries: collection?.pullRequestContributionsByRepository,
+			key: "totalPullRequestContributions",
+		},
+		{
+			type: "Reviews",
+			entries: collection?.pullRequestReviewContributionsByRepository,
+			key: "totalPullRequestReviewContributions",
+		},
+		{
+			type: "Issues",
+			entries: collection?.issueContributionsByRepository,
+			key: "totalIssueContributions",
+		},
+	];
 	return {
 		days: sorted.map((day) => ({
 			date: day.date,
@@ -94,6 +164,10 @@ export async function getYearContributions(
 			sorted.reduce((sum, day) => sum + day.contributionCount, 0),
 		start: sorted.length > 0 ? sorted[0].date : null,
 		end: sorted.length > 0 ? sorted[sorted.length - 1].date : null,
+		ownership: ownershipTypes.map(({ type, entries, key }) => ({
+			type,
+			...splitOwnership(entries, key, username),
+		})),
 	};
 }
 

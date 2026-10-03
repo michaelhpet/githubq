@@ -1,10 +1,12 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Skeleton } from "@/components/skeleton";
 import type {
 	ExternalPullRequest,
-	RepoOwnershipSplit,
+	WeeklyOwnership,
 } from "@/lib/activity/stats";
+import type { YearOwnership } from "@/lib/api/get-contributions";
 import type { AllTimePullRequest } from "@/lib/api/search";
+import { WeeklyOwnershipChart } from "./weekly-ownership-chart";
+import { YearOwnershipChart } from "./year-ownership-chart";
 
 interface Item {
 	key: string;
@@ -17,11 +19,9 @@ export function OpenSourceReachSkeleton() {
 	return (
 		<div className="flex flex-col gap-2">
 			<Skeleton className="h-5 w-56" />
+			<Skeleton className="h-64 w-full" />
 			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
-				<div className="flex flex-col gap-2">
-					<Skeleton className="h-52 w-full" />
-					<Skeleton className="h-4 w-40" />
-				</div>
+				<Skeleton className="h-56 w-full" />
 				<div className="flex flex-col gap-2">
 					<Skeleton className="h-16 w-full" />
 					<Skeleton className="h-16 w-full" />
@@ -37,13 +37,15 @@ export function OpenSourceReach({
 	allTime,
 	allTimeTotal,
 	allTimeLoading,
-	split,
+	yearly,
+	weekly,
 }: {
 	recent: ExternalPullRequest[];
 	allTime: AllTimePullRequest[];
 	allTimeTotal: number | null;
 	allTimeLoading: boolean;
-	split: RepoOwnershipSplit[];
+	yearly: YearOwnership[] | null;
+	weekly: WeeklyOwnership[];
 }) {
 	const items: Item[] =
 		allTime.length > 0
@@ -63,7 +65,7 @@ export function OpenSourceReach({
 	if (allTimeLoading && items.length === 0) {
 		return <OpenSourceReachSkeleton />;
 	}
-	if (allTimeTotal === null && items.length === 0) {
+	if (allTimeTotal === null && items.length === 0 && !yearly) {
 		return (
 			<p className="text-sm text-dim">
 				No pull requests merged into external repositories found.
@@ -71,7 +73,7 @@ export function OpenSourceReach({
 		);
 	}
 	return (
-		<div className="flex flex-col gap-2">
+		<div className="flex flex-col gap-4">
 			<p className="text-sm">
 				<span className="font-bold">
 					{(allTimeTotal ?? recent.length).toLocaleString()}
@@ -86,68 +88,18 @@ export function OpenSourceReach({
 						: "in this window · external only"}
 				</span>
 			</p>
+			{yearly && (
+				<div className="flex flex-col gap-2">
+					<p className="text-sm font-medium">Past year by contribution type</p>
+					<YearOwnershipChart data={yearly} />
+				</div>
+			)}
 			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 print:grid-cols-2">
-				{split.length > 0 && (
-					<div className="flex flex-col gap-2">
-						<div className="h-52 w-full text-dim">
-							<ResponsiveContainer width="100%" height="100%">
-								<PieChart>
-									<Pie
-										data={split}
-										dataKey="value"
-										nameKey="name"
-										innerRadius="55%"
-										outerRadius="80%"
-										paddingAngle={2}
-									>
-										{split.map((entry) => (
-											<Cell
-												key={entry.name}
-												fill={
-													entry.name === "Own repositories"
-														? "#0c8ce9"
-														: "#8b949e"
-												}
-											/>
-										))}
-									</Pie>
-									<Tooltip
-										contentStyle={{
-											backgroundColor: "rgb(var(--paper))",
-											border: "1px solid rgb(var(--stroke))",
-											borderRadius: 8,
-											fontSize: 12,
-										}}
-										formatter={(value) => [
-											`${typeof value === "number" ? value : 0} events`,
-											"",
-										]}
-									/>
-								</PieChart>
-							</ResponsiveContainer>
-						</div>
-						<ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
-							{split.map((entry) => (
-								<li key={entry.name} className="flex items-center gap-1">
-									<span
-										aria-hidden="true"
-										className="h-2 w-2 rounded-full"
-										style={{
-											backgroundColor:
-												entry.name === "Own repositories"
-													? "#0c8ce9"
-													: "#8b949e",
-										}}
-									/>
-									{entry.name}: {entry.value}
-								</li>
-							))}
-						</ul>
-						<p className="text-xs text-dim">
-							Share of recent activity in own vs external repositories.
-						</p>
-					</div>
-				)}
+				<div className="flex flex-col gap-2 self-stretch">
+					<p className="text-sm font-medium">Recent weeks</p>
+					<WeeklyOwnershipChart data={weekly} />
+					<p className="text-xs text-dim">Own vs external activity per week.</p>
+				</div>
 				{items.length > 0 && (
 					<div className="flex flex-col gap-2">
 						{allTime.length > 0 && (

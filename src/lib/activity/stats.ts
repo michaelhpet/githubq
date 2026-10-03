@@ -1,4 +1,5 @@
 import type { GithubEvent } from "@/lib/api/get-activity";
+import { formatDay } from "@/lib/format";
 
 export interface ContributionDay {
 	date: string;
@@ -206,27 +207,47 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 	};
 }
 
-export interface RepoOwnershipSplit {
-	name: string;
-	value: number;
+export interface WeeklyOwnership {
+	week: string;
+	own: number;
+	external: number;
 }
 
-/** Share of recent events in the user's own repos vs external repos. */
-export function getRepoOwnershipSplit(
+/**
+ * Own vs external event counts per trailing week (Sunday-start UTC,
+ * matching the heatmap). Covers the events window, not the full year.
+ */
+export function getWeeklyOwnership(
 	events: GithubEvent[],
 	username: string,
-): RepoOwnershipSplit[] {
+	weekCount = 8,
+): WeeklyOwnership[] {
 	const owner = username.toLowerCase();
-	let own = 0;
-	let external = 0;
-	for (const event of events) {
-		if (event.repo.name.split("/")[0].toLowerCase() === owner) own += 1;
-		else external += 1;
+	const today = new Date();
+	today.setUTCHours(0, 0, 0, 0);
+	const thisSunday = today.getTime() - today.getUTCDay() * 24 * 60 * 60 * 1000;
+	const buckets = new Map<string, { own: number; external: number }>();
+	for (let i = 0; i < weekCount; i++) {
+		const start = new Date(
+			thisSunday - (weekCount - 1 - i) * 7 * 24 * 60 * 60 * 1000,
+		);
+		buckets.set(start.toISOString().slice(0, 10), { own: 0, external: 0 });
 	}
-	return [
-		{ name: "Own repositories", value: own },
-		{ name: "External repositories", value: external },
-	].filter((entry) => entry.value > 0);
+	for (const event of events) {
+		const at = new Date(event.created_at);
+		const sunday = new Date(
+			Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()) -
+				at.getUTCDay() * 24 * 60 * 60 * 1000,
+		);
+		const bucket = buckets.get(sunday.toISOString().slice(0, 10));
+		if (!bucket) continue;
+		if (event.repo.name.split("/")[0].toLowerCase() === owner) bucket.own += 1;
+		else bucket.external += 1;
+	}
+	return [...buckets.entries()].map(([start, counts]) => ({
+		week: formatDay(start),
+		...counts,
+	}));
 }
 
 export interface ExternalPullRequest {

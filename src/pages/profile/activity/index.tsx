@@ -4,7 +4,7 @@ import {
 	buildContributionWindow,
 	getActivityPatterns,
 	getExternalMergedPRs,
-	getRepoOwnershipSplit,
+	getWeeklyOwnership,
 	getWorkTypeBreakdown,
 } from "@/lib/activity/stats";
 import { useActivity } from "@/lib/api/get-activity";
@@ -91,8 +91,8 @@ export function Activity() {
 	const externalPRs = hasEvents
 		? getExternalMergedPRs(events, username ?? "")
 		: [];
-	const ownershipSplit = hasEvents
-		? getRepoOwnershipSplit(events, username ?? "")
+	const weeklyOwnership = hasEvents
+		? getWeeklyOwnership(events, username ?? "")
 		: [];
 	// Authenticated users get the true yearly calendar; everyone else
 	// falls back to the trailing public-events window.
@@ -173,7 +173,8 @@ export function Activity() {
 					allTime={allTimePRs?.items ?? []}
 					allTimeTotal={allTimePRs?.total ?? null}
 					allTimeLoading={allTimePRsLoading}
-					split={ownershipSplit}
+					yearly={yearData?.ownership ?? null}
+					weekly={weeklyOwnership}
 				/>
 			</article>
 		</div>
