@@ -30,6 +30,12 @@ async function fetchRepo<T>(
 	if (res.status === 202 || res.status === 204 || res.status === 404) {
 		return null;
 	}
+	// A 403 without exhausted quota means the data itself is unavailable
+	// (e.g. contributor list too large) — not a rate limit. Don't let one
+	// repo's missing piece fail the whole batch.
+	if (res.status === 403 && res.headers.get("x-ratelimit-remaining") !== "0") {
+		return null;
+	}
 	throwForStatus(res, `${path} for "${fullName}"`);
 	return (await res.json()) as T;
 }
