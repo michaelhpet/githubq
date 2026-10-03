@@ -129,6 +129,9 @@ export function LanguagesEcosystem({
 			{ecosystem.some((slice) => slice.value > 0) && (
 				<div className="flex flex-col gap-2">
 					<p className="text-sm font-medium">Ecosystem balance</p>
+					<p className="text-xs text-dim">
+						Top repositories per area, from repo topics and languages.
+					</p>
 					<div className="h-64 w-full text-dim">
 						<ResponsiveContainer width="100%" height="100%">
 							<RadarChart data={ecosystem} outerRadius="70%">
@@ -159,9 +162,6 @@ export function LanguagesEcosystem({
 							</RadarChart>
 						</ResponsiveContainer>
 					</div>
-					<p className="text-xs text-dim">
-						Top repositories per area, from repo topics and languages.
-					</p>
 				</div>
 			)}
 		</div>
