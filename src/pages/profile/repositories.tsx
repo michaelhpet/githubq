@@ -55,14 +55,14 @@ export function Repositories() {
 
 	return (
 		<div className="flex flex-col gap-2">
-			<div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-3">
+			<div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-3">
 				{topRepos.map((repo) => {
 					const contributors =
 						contributorsByRepo.get(repo.full_name)?.slice(0, 3) ?? [];
 					return (
 						<div
 							key={repo.full_name}
-							className="flex flex-col gap-2 rounded-lg border-2 border-stroke bg-background p-2 shadow"
+							className="flex flex-col gap-2 rounded-lg border border-stroke bg-background p-2 shadow"
 						>
 							<div className="flex items-center justify-between gap-2">
 								<a

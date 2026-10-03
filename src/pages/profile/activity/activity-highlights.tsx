@@ -2,7 +2,7 @@ import type { ActivityPatterns } from "@/lib/activity/stats";
 
 function Highlight({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="flex min-w-0 flex-col gap-1 rounded-lg border-2 border-stroke bg-background p-3">
+		<div className="flex min-w-0 flex-col gap-1 rounded-lg border border-stroke bg-background p-3">
 			<p className="text-sm text-dim">{label}</p>
 			<p className="truncate text-xl font-bold" title={value}>
 				{value}

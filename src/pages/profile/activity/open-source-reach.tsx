@@ -111,7 +111,7 @@ export function OpenSourceReach({
 							{items.map((item) => (
 								<li
 									key={item.key}
-									className="flex flex-col gap-1 rounded-lg border-2 border-stroke bg-background p-2"
+									className="flex flex-col gap-1 rounded-lg border border-stroke bg-background p-2"
 								>
 									<a
 										href={item.url}

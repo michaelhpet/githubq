@@ -32,7 +32,7 @@ function formatDate(iso: string | null): string {
 
 function Metric({ label, value }: { label: string; value: string }) {
 	return (
-		<div className="flex flex-col gap-1 rounded-lg border-2 border-stroke bg-background p-3">
+		<div className="flex flex-col gap-1 rounded-lg border border-stroke bg-background p-3">
 			<p className="text-sm text-dim">{label}</p>
 			<p className="text-xl font-bold">{value}</p>
 		</div>
@@ -142,7 +142,7 @@ export function Leadership() {
 						{releases.map((stat) => (
 							<li
 								key={stat.fullName}
-								className="flex items-center justify-between gap-2 rounded-lg border-2 border-stroke bg-background p-2"
+								className="flex items-center justify-between gap-2 rounded-lg border border-stroke bg-background p-2"
 							>
 								<div className="flex min-w-0 flex-col">
 									<p className="truncate text-sm font-medium">
