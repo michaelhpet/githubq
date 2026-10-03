@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "@/lib/auth/session";
+import { githubFetch, throwForStatus } from "./client";
 
 export const ACTIVITY_QUERY_KEY = "activity";
 
@@ -11,7 +13,7 @@ const MAX_PAGES = 10;
 function getNextPage(linkHeader: string | null): string | null {
 	if (!linkHeader) return null;
 	const match = linkHeader.match(/<([^>]+)>\s*;\s*rel="next"/);
-	return match ? match[1] : null;
+	return match ? match[1].replace("https://api.github.com", "") : null;
 }
 
 export interface GithubEvent {
@@ -33,37 +35,28 @@ export interface GithubEvent {
 	};
 }
 
-export async function getUserEvents(username: string): Promise<GithubEvent[]> {
+export async function getUserEvents(
+	username: string,
+	token?: string | null,
+): Promise<GithubEvent[]> {
 	const events: GithubEvent[] = [];
-	let url: string | null =
-		`https://api.github.com/users/${encodeURIComponent(username)}/events/public?per_page=100`;
-	for (let page = 0; page < MAX_PAGES && url; page++) {
-		const res = await fetch(url, {
-			headers: { Accept: "application/vnd.github+json" },
-		});
-		if (res.status === 403) {
-			const reset = res.headers.get("x-ratelimit-reset");
-			const when = reset
-				? ` (resets at ${new Date(Number(reset) * 1000).toLocaleTimeString()})`
-				: "";
-			throw new Error(`GitHub API rate limit exceeded${when}`);
-		}
-		if (!res.ok) {
-			throw new Error(
-				`Could not fetch activity for "${username}" (${res.status})`,
-			);
-		}
+	let path: string | null =
+		`/users/${encodeURIComponent(username)}/events/public?per_page=100`;
+	for (let page = 0; page < MAX_PAGES && path; page++) {
+		const res = await githubFetch(path, token);
+		throwForStatus(res, `activity for "${username}"`);
 		const pageEvents = (await res.json()) as GithubEvent[];
 		events.push(...pageEvents);
-		url = getNextPage(res.headers.get("Link"));
+		path = getNextPage(res.headers.get("Link"));
 	}
 	return events;
 }
 
 export function useActivity(username: string | undefined) {
+	const { token } = useSession();
 	return useQuery({
-		queryKey: [ACTIVITY_QUERY_KEY, username],
-		queryFn: () => getUserEvents(username as string),
+		queryKey: [ACTIVITY_QUERY_KEY, username, token ? "authed" : "anon"],
+		queryFn: () => getUserEvents(username as string, token),
 		enabled: Boolean(username),
 	});
 }

@@ -22,8 +22,10 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.14",
 		"@tanstack/react-query-devtools": "^5.104.0",
+		"@types/node": "^26.6.4",
 		"@types/react": "^18.2.66",
 		"@types/react-dom": "^18.2.22",
+		"@vercel/node": "^17.0.0",
 		"@vitejs/plugin-react": "^4.2.1",
 		"autoprefixer": "^10.4.19",
 		"postcss": "^8.4.38",

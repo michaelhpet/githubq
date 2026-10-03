@@ -7,7 +7,9 @@ import {
 	Navigate,
 	RouterProvider,
 } from "react-router-dom";
+import { AuthProvider } from "@/lib/auth/session";
 import { AppLayout } from "./layouts";
+import { Callback } from "./pages/callback";
 import { Home } from "./pages/home";
 import { Profile } from "./pages/profile";
 
@@ -34,19 +36,22 @@ if (!rootElement) throw new Error("Root element not found");
 ReactDOM.createRoot(rootElement).render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>
-			<RouterProvider
-				router={createBrowserRouter([
-					{
-						path: "/",
-						element: <AppLayout />,
-						children: [
-							{ path: "/", element: <Home /> },
-							{ path: "/:username", element: <Profile /> },
-						],
-					},
-					{ path: "*", element: <Navigate to="/" /> },
-				])}
-			/>
+			<AuthProvider>
+				<RouterProvider
+					router={createBrowserRouter([
+						{
+							path: "/",
+							element: <AppLayout />,
+							children: [
+								{ path: "/", element: <Home /> },
+								{ path: "/callback", element: <Callback /> },
+								{ path: "/:username", element: <Profile /> },
+							],
+						},
+						{ path: "*", element: <Navigate to="/" /> },
+					])}
+				/>
+			</AuthProvider>
 			{!!import.meta.env.DEV && (
 				<React.Suspense fallback={null}>
 					<ReactQueryDevtools initialIsOpen={false} />

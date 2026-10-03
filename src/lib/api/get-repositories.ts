@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "@/lib/auth/session";
+import { githubFetch, throwForStatus } from "./client";
 
 export const REPOSITORIES_QUERY_KEY = "repositories";
 
@@ -19,25 +21,17 @@ export interface GithubRepo {
 	owner: { login: string };
 }
 
-export async function getUserRepos(username: string): Promise<GithubRepo[]> {
+export async function getUserRepos(
+	username: string,
+	token?: string | null,
+): Promise<GithubRepo[]> {
 	const repos: GithubRepo[] = [];
 	for (let page = 1; page <= MAX_PAGES; page++) {
-		const res = await fetch(
-			`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&page=${page}&sort=pushed`,
-			{ headers: { Accept: "application/vnd.github+json" } },
+		const res = await githubFetch(
+			`/users/${encodeURIComponent(username)}/repos?per_page=100&page=${page}&sort=pushed`,
+			token,
 		);
-		if (res.status === 403) {
-			const reset = res.headers.get("x-ratelimit-reset");
-			const when = reset
-				? ` (resets at ${new Date(Number(reset) * 1000).toLocaleTimeString()})`
-				: "";
-			throw new Error(`GitHub API rate limit exceeded${when}`);
-		}
-		if (!res.ok) {
-			throw new Error(
-				`Could not fetch repositories for "${username}" (${res.status})`,
-			);
-		}
+		throwForStatus(res, `repositories for "${username}"`);
 		const pageRepos = (await res.json()) as GithubRepo[];
 		repos.push(...pageRepos);
 		if (pageRepos.length < 100) break;
@@ -46,9 +40,10 @@ export async function getUserRepos(username: string): Promise<GithubRepo[]> {
 }
 
 export function useRepositories(username: string | undefined) {
+	const { token } = useSession();
 	return useQuery({
-		queryKey: [REPOSITORIES_QUERY_KEY, username],
-		queryFn: () => getUserRepos(username as string),
+		queryKey: [REPOSITORIES_QUERY_KEY, username, token ? "authed" : "anon"],
+		queryFn: () => getUserRepos(username as string, token),
 		enabled: Boolean(username),
 	});
 }

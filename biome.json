@@ -28,7 +28,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["*.config.*"],
+			"includes": ["*.config.*", "api/**"],
 			"linter": {
 				"rules": {
 					"style": {

@@ -1,4 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
+import { useSession } from "@/lib/auth/session";
+import { githubFetch, throwForStatus } from "./client";
 
 export const REPO_LANGUAGES_QUERY_KEY = "repo-languages";
 export const REPO_PARTICIPATION_QUERY_KEY = "repo-participation";
@@ -17,40 +19,42 @@ export interface RepoContributor {
 	contributions: number;
 }
 
-async function fetchRepo<T>(fullName: string, path: string): Promise<T | null> {
-	const res = await fetch(`https://api.github.com/repos/${fullName}/${path}`, {
-		headers: { Accept: "application/vnd.github+json" },
-	});
+async function fetchRepo<T>(
+	fullName: string,
+	path: string,
+	token?: string | null,
+): Promise<T | null> {
+	const res = await githubFetch(`/repos/${fullName}/${path}`, token);
 	// GitHub returns 202 while crunching stats, or 204/404 when unavailable.
 	if (res.status === 202 || res.status === 204 || res.status === 404) {
 		return null;
 	}
-	if (!res.ok) {
-		throw new Error(
-			`Could not fetch ${path} for "${fullName}" (${res.status})`,
-		);
-	}
+	throwForStatus(res, `${path} for "${fullName}"`);
 	return (await res.json()) as T;
 }
 
 export function getRepoLanguages(
 	fullName: string,
+	token?: string | null,
 ): Promise<RepoLanguages | null> {
-	return fetchRepo<RepoLanguages>(fullName, "languages");
+	return fetchRepo<RepoLanguages>(fullName, "languages", token);
 }
 
 export function getRepoParticipation(
 	fullName: string,
+	token?: string | null,
 ): Promise<RepoParticipation | null> {
-	return fetchRepo<RepoParticipation>(fullName, "stats/participation");
+	return fetchRepo<RepoParticipation>(fullName, "stats/participation", token);
 }
 
 export function getRepoContributors(
 	fullName: string,
+	token?: string | null,
 ): Promise<RepoContributor[] | null> {
 	return fetchRepo<RepoContributor[]>(
 		fullName,
 		"contributors?per_page=5&anon=1",
+		token,
 	);
 }
 
@@ -62,14 +66,16 @@ export interface RepoStats {
 }
 
 export function useRepoStats(fullNames: string[]) {
+	const { token } = useSession();
+	const authed = token ? "authed" : "anon";
 	const results = useQueries({
 		queries: fullNames.map((fullName) => ({
-			queryKey: [REPO_LANGUAGES_QUERY_KEY, fullName],
+			queryKey: [REPO_LANGUAGES_QUERY_KEY, fullName, authed],
 			queryFn: async (): Promise<RepoStats> => {
 				const [languages, participation, contributors] = await Promise.all([
-					getRepoLanguages(fullName),
-					getRepoParticipation(fullName),
-					getRepoContributors(fullName),
+					getRepoLanguages(fullName, token),
+					getRepoParticipation(fullName, token),
+					getRepoContributors(fullName, token),
 				]);
 				return { fullName, languages, participation, contributors };
 			},
