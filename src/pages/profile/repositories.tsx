@@ -1,3 +1,4 @@
+import { IconGitFork, IconStar } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
 import { Skeleton } from "@/components/skeleton";
 import { useRepoStats } from "@/lib/api/get-repo-stats";
@@ -74,12 +75,19 @@ export function Repositories() {
 									{repo.name}
 								</a>
 								{(repo.stargazers_count > 0 || repo.forks_count > 0) && (
-									<p className="shrink-0 text-xs text-dim">
-										{repo.stargazers_count > 0 &&
-											`⭐ ${compactCount.format(repo.stargazers_count)}`}
-										{repo.stargazers_count > 0 && repo.forks_count > 0 && " · "}
-										{repo.forks_count > 0 &&
-											`🍴 ${compactCount.format(repo.forks_count)}`}
+									<p className="flex shrink-0 items-center gap-1 text-xs text-dim">
+										{repo.stargazers_count > 0 && (
+											<span className="flex items-center gap-0.5">
+												<IconStar size={14} aria-hidden="true" />
+												{compactCount.format(repo.stargazers_count)}
+											</span>
+										)}
+										{repo.forks_count > 0 && (
+											<span className="flex items-center gap-0.5">
+												<IconGitFork size={14} aria-hidden="true" />
+												{compactCount.format(repo.forks_count)}
+											</span>
+										)}
 									</p>
 								)}
 							</div>
