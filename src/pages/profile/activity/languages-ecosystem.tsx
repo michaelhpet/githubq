@@ -128,6 +128,27 @@ function LanguagesTreemap({ shares }: { shares: LanguageShare[] }) {
 	);
 }
 
+function EcosystemTooltip({
+	active,
+	payload,
+	label,
+}: {
+	active?: boolean;
+	payload?: { value?: number | string }[];
+	label?: string;
+}) {
+	const value = payload?.[0]?.value;
+	if (!active || typeof value !== "number") return null;
+	return (
+		<div className="rounded-lg border border-stroke bg-paper px-2 py-1 text-xs text-foreground">
+			<p className="font-medium">{String(label)}</p>
+			<p className="text-dim">
+				{value} {value === 1 ? "repo" : "repos"}
+			</p>
+		</div>
+	);
+}
+
 export function LanguagesEcosystem({
 	shares,
 	ecosystem,
@@ -162,16 +183,7 @@ export function LanguagesEcosystem({
 								/>
 								<Tooltip
 									cursor={{ stroke: "currentColor", strokeOpacity: 0.2 }}
-									contentStyle={{
-										backgroundColor: "rgb(var(--paper))",
-										border: "1px solid rgb(var(--stroke))",
-										borderRadius: 8,
-										fontSize: 12,
-									}}
-									formatter={(value) => [
-										`${typeof value === "number" ? value : 0} repos`,
-										"",
-									]}
+									content={<EcosystemTooltip />}
 								/>
 								<Radar
 									dataKey="value"
