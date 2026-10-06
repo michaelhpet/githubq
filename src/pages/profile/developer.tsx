@@ -1,26 +1,33 @@
 import { IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/button";
 import { Skeleton } from "@/components/skeleton";
 import { Tag } from "@/components/tag";
 import { useProfile } from "@/lib/api/get-profile";
 import { exportReportAsPdf } from "@/lib/export/report-export";
-import { clearPersistedCache } from "@/lib/query-client";
+import { queryClient } from "@/lib/query-client";
 
 export function Developer() {
 	const { username } = useParams();
-	const queryClient = useQueryClient();
 	const { data, isLoading, isError, error } = useProfile(username);
 	const [downloading, setDownloading] = useState(false);
 
 	if (isLoading) return <DeveloperSkeleton />;
 
+	function belongsToUser(queryKey: unknown): boolean {
+		const target = (username ?? "").toLowerCase();
+		const scope = Array.isArray(queryKey) && typeof queryKey[1] === "string"
+			? (queryKey[1] as string).toLowerCase()
+			: "";
+		return scope === target || scope.startsWith(`${target}/`);
+	}
+
 	async function auditAgain(): Promise<void> {
-		await queryClient.cancelQueries();
-		queryClient.removeQueries();
-		await clearPersistedCache();
+		const predicate = (query: { queryKey: unknown }): boolean =>
+			belongsToUser(query.queryKey);
+		await queryClient.cancelQueries({ predicate });
+		await queryClient.resetQueries({ predicate });
 	}
 
 	async function download(): Promise<void> {

@@ -24,6 +24,12 @@ async function stage<T>(name: string, fn: () => Promise<T>): Promise<T> {
 	}
 }
 
+function timestamp(): string {
+	const now = new Date();
+	const pad = (value: number): string => String(value).padStart(2, "0");
+	return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+}
+
 function loadImage(dataUrl: string): Promise<HTMLImageElement> {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
@@ -138,8 +144,8 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 							orientation: widthPt > heightPt ? "landscape" : "portrait",
 							compress: true,
 						});
-						pdf.addImage(dataUrl, "PNG", 0, 0, widthPt, heightPt);
-						pdf.save(`${username}-githubq-report.pdf`);
+					pdf.addImage(dataUrl, "PNG", 0, 0, widthPt, heightPt);
+					pdf.save(`${username}-${timestamp()}.pdf`);
 					});
 					return;
 				} catch (error) {
