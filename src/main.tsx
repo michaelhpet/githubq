@@ -1,4 +1,5 @@
 import "@/assets/styles/global.css";
+import { hydrate } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -22,33 +23,47 @@ const ReactQueryDevtools = React.lazy(() =>
 
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Root element not found");
+const root = ReactDOM.createRoot(rootElement);
 
-ReactDOM.createRoot(rootElement).render(
-	<React.StrictMode>
-		<PersistQueryClientProvider
-			client={queryClient}
-			persistOptions={{
-				persister: queryPersister,
-				buster: persistBuster,
-				maxAge: 1000 * 60 * 60,
-			}}
-		>
-			<AuthProvider>
-				<RouterProvider
-					router={createBrowserRouter([
-						{
-							path: "/",
-							element: <AppLayout />,
-							children: [
-								{ path: "/", element: <Home /> },
-								{ path: "/callback", element: <Callback /> },
-								{ path: "/:username", element: <Profile /> },
-							],
-						},
-						{ path: "*", element: <Navigate to="/" /> },
-					])}
-				/>
-			</AuthProvider>
+async function boot(): Promise<void> {
+	try {
+		const persisted = await queryPersister.restoreClient();
+		if (
+			persisted &&
+			persisted.buster === persistBuster &&
+			Date.now() - persisted.timestamp < 1000 * 60 * 60
+		) {
+			hydrate(queryClient, persisted.clientState);
+		}
+	} catch {
+		await queryPersister.removeClient();
+	}
+	root.render(
+		<React.StrictMode>
+			<PersistQueryClientProvider
+				client={queryClient}
+				persistOptions={{
+					persister: queryPersister,
+					buster: persistBuster,
+					maxAge: 1000 * 60 * 60,
+				}}
+			>
+				<AuthProvider>
+					<RouterProvider
+						router={createBrowserRouter([
+							{
+								path: "/",
+								element: <AppLayout />,
+								children: [
+									{ path: "/", element: <Home /> },
+									{ path: "/callback", element: <Callback /> },
+									{ path: "/:username", element: <Profile /> },
+								],
+							},
+							{ path: "*", element: <Navigate to="/" /> },
+						])}
+					/>
+				</AuthProvider>
 			{!!import.meta.env.DEV && (
 				<React.Suspense fallback={null}>
 					<ReactQueryDevtools initialIsOpen={false} />
@@ -56,4 +71,7 @@ ReactDOM.createRoot(rootElement).render(
 			)}
 		</PersistQueryClientProvider>
 	</React.StrictMode>,
-);
+	);
+}
+
+void boot();
