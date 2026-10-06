@@ -82,6 +82,13 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 								imagePlaceholder: TRANSPARENT_PIXEL,
 								onImageErrorHandler: () => TRANSPARENT_PIXEL,
 								skipFonts,
+								style: {
+									position: "static",
+									left: "auto",
+									top: "auto",
+									opacity: "1",
+									zIndex: "auto",
+								},
 							}),
 					);
 					const img = await stage("decode-capture", () => loadImage(dataUrl));
