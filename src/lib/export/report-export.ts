@@ -7,6 +7,13 @@ const PIXEL_RATIOS = [2, 1.5, 1];
 const EXPORT_HORIZONTAL_PADDING = 32;
 const TRANSPARENT_PIXEL =
 	"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+const EXPORT_STYLE_OVERRIDES = [
+	"body{margin:0}",
+	".print\\:hidden{display:none}",
+	".print\\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}",
+	".recharts-tooltip-wrapper{display:none!important}",
+	"*{animation:none!important;transition:none!important}",
+].join("");
 
 async function stage<T>(name: string, fn: () => Promise<T>): Promise<T> {
 	try {
@@ -27,34 +34,50 @@ function loadImage(dataUrl: string): Promise<HTMLImageElement> {
 	});
 }
 
-export async function exportReportAsPdf(username: string): Promise<void> {
-	const source = document.querySelector<HTMLElement>("[data-export-root]");
-	if (!source) {
-		throw new Error("Report content not found for PDF export");
-	}
-	const wrapper = document.createElement("div");
-	wrapper.className = "pdf-export-surface";
-	wrapper.setAttribute("aria-hidden", "true");
-	wrapper.style.cssText = [
+async function buildExportFrame(source: HTMLElement): Promise<{
+	frame: HTMLIFrameElement;
+	surface: HTMLElement;
+}> {
+	const width = source.offsetWidth;
+	const height = source.scrollHeight;
+	const frame = document.createElement("iframe");
+	frame.setAttribute("aria-hidden", "true");
+	frame.setAttribute("tabindex", "-1");
+	frame.style.cssText = [
 		"position:fixed",
 		"top:0",
 		"left:0",
-		`width:${source.offsetWidth + EXPORT_HORIZONTAL_PADDING * 2}px`,
-		`padding:0 ${EXPORT_HORIZONTAL_PADDING}px`,
-		"background:#ffffff",
+		"border:0",
 		"opacity:0",
 		"pointer-events:none",
 		"z-index:-1",
+		`width:${width + EXPORT_HORIZONTAL_PADDING * 2}px`,
+		`height:${Math.max(height, window.innerHeight)}px`,
 	].join(";");
-	const root = document.documentElement;
-	const wasDark = root.classList.contains("dark");
-	const prevOpacity = root.style.opacity;
-	if (wasDark) {
-		root.classList.remove("dark");
-		root.style.opacity = "0";
+	document.body.appendChild(frame);
+	const doc = frame.contentDocument;
+	if (!doc) {
+		frame.remove();
+		throw new Error("Could not prepare PDF export surface");
 	}
+	document.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+		doc.head.appendChild(node.cloneNode(true));
+	});
+	const overrides = doc.createElement("style");
+	overrides.textContent = EXPORT_STYLE_OVERRIDES;
+	doc.head.appendChild(overrides);
+	const surface = doc.createElement("div");
+	surface.style.cssText = [
+		"box-sizing:border-box",
+		`width:${width + EXPORT_HORIZONTAL_PADDING * 2}px`,
+		`padding:0 ${EXPORT_HORIZONTAL_PADDING}px`,
+		"background:#ffffff",
+		"color:#1e1e1e",
+	].join(";");
 	const clone = source.cloneNode(true) as HTMLElement;
-	clone.style.width = `${source.offsetWidth}px`;
+	clone.style.width = `${width}px`;
+	surface.appendChild(clone);
+	doc.body.appendChild(surface);
 	const liveImages = source.querySelectorAll("img");
 	clone.querySelectorAll("img").forEach((img, index) => {
 		const live = liveImages.item(index);
@@ -65,15 +88,22 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 			img.remove();
 		}
 	});
-	wrapper.appendChild(clone);
-	document.body.appendChild(wrapper);
+	await doc.fonts.ready;
+	await new Promise<void>((resolve) =>
+		requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+	);
+	return { frame, surface };
+}
+
+export async function exportReportAsPdf(username: string): Promise<void> {
+	const source = document.querySelector<HTMLElement>("[data-export-root]");
+	if (!source) {
+		throw new Error("Report content not found for PDF export");
+	}
+	const { frame, surface } = await stage("prepare-surface", () =>
+		buildExportFrame(source),
+	);
 	try {
-		await stage("fonts-ready", async () => {
-			await document.fonts.ready;
-			await new Promise<void>((resolve) =>
-				requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-			);
-		});
 		let lastError: unknown = null;
 		let tooLarge = false;
 		for (const skipFonts of [false, true]) {
@@ -82,20 +112,13 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 					const dataUrl = await stage(
 						`capture pixelRatio=${pixelRatio} skipFonts=${skipFonts}`,
 						() =>
-							toPng(wrapper, {
+							toPng(surface, {
 								pixelRatio,
 								cacheBust: true,
 								backgroundColor: "#ffffff",
 								imagePlaceholder: TRANSPARENT_PIXEL,
 								onImageErrorHandler: () => TRANSPARENT_PIXEL,
 								skipFonts,
-								style: {
-									position: "static",
-									left: "auto",
-									top: "auto",
-									opacity: "1",
-									zIndex: "auto",
-								},
 							}),
 					);
 					const img = await stage("decode-capture", () => loadImage(dataUrl));
@@ -130,10 +153,6 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 		}
 		throw lastError instanceof Error ? lastError : new Error("PDF export failed");
 	} finally {
-		wrapper.remove();
-		if (wasDark) {
-			root.classList.add("dark");
-			root.style.opacity = prevOpacity;
-		}
+		frame.remove();
 	}
 }
