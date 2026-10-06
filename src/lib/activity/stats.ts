@@ -17,15 +17,6 @@ function toDayKey(iso: string): string {
 	return iso.slice(0, 10);
 }
 
-/**
- * Contribution weight of a single event. Pushes count their commits,
- * every other tracked event counts as one contribution.
- *
- * GitHub sometimes omits push size info (no `distinct_size`, `size`, or
- * `commits`); a code push still represents at least one commit, so fall
- * back to 1 — except for new-ref pushes (zero `before`), which carry no
- * commits of their own.
- */
 function eventWeight(event: GithubEvent): number {
 	if (event.type === "PushEvent") {
 		const size =
@@ -78,11 +69,6 @@ export interface BreakdownPoint {
 	lifetime?: number;
 }
 
-/**
- * Every event in the window counts toward exactly one axis, using the
- * same weights as the heatmap (pushes count their commits, everything
- * else counts once). Axes with no activity are omitted.
- */
 function classifyWorkType(event: GithubEvent): { type: string; value: number } {
 	switch (event.type) {
 		case "PushEvent":
@@ -126,8 +112,6 @@ export function getWorkTypeBreakdown(events: GithubEvent[]): BreakdownPoint[] {
 		const { type, value } = classifyWorkType(event);
 		counts.set(type, (counts.get(type) ?? 0) + value);
 	}
-	// All axes are always returned (zero included) so the radar keeps its
-	// full shape instead of collapsing to only the active types.
 	return WORK_TYPE_ORDER.map((type) => ({
 		type,
 		value: counts.get(type) ?? 0,
@@ -146,10 +130,6 @@ export interface WorkTypeOwnership {
 	external: number;
 }
 
-/**
- * Own vs external split per work type, using the same axes as the radar.
- * Only types with activity are returned; empty ones are omitted.
- */
 export function getWorkTypeOwnership(
 	events: GithubEvent[],
 	username: string,
@@ -174,11 +154,6 @@ export interface WorkTypeMomentum {
 	delta: number;
 }
 
-/**
- * Per-type momentum: activity in the second half of the event window vs
- * the first half, split at the time midpoint between oldest and newest
- * event. Positive delta means accelerating.
- */
 export function getWorkTypeMomentum(events: GithubEvent[]): WorkTypeMomentum[] {
 	if (events.length === 0) return [];
 	const times = events.map((event) =>
@@ -220,11 +195,6 @@ const WORK_TYPE_ARCHETYPES: Record<string, string> = {
 	"Other activity": "All-rounder",
 };
 
-/**
- * Headline archetype from the dominant work type. A type holding at
- * least half of all window activity names the archetype; otherwise the
- * profile reads as balanced ("All-rounder").
- */
 export function getWorkTypeSummary(
 	breakdown: BreakdownPoint[],
 ): WorkTypeSummary | null {
@@ -281,7 +251,6 @@ export function getActivityPatterns(events: GithubEvent[]): ActivityPatterns {
 	const hourCounts = new Array<number>(24).fill(0);
 	const daySet = new Set<number>();
 	for (const event of events) {
-		// Local time of the viewer, so "active hours" read naturally.
 		const at = new Date(event.created_at);
 		weekdayCounts[at.getDay()] += 1;
 		hourCounts[at.getHours()] += 1;
@@ -361,10 +330,6 @@ export interface WeeklyOwnership {
 	external: number;
 }
 
-/**
- * Own vs external event counts per trailing week (Sunday-start UTC,
- * matching the heatmap). Covers the events window, not the full year.
- */
 export function getWeeklyOwnership(
 	events: GithubEvent[],
 	username: string,
@@ -408,7 +373,6 @@ export interface WorkHabitData {
 	daily: WorkHabitPoint[];
 }
 
-/** Raw hour-of-day and day-of-week distributions (viewer-local time). */
 export function getWorkHabitData(events: GithubEvent[]): WorkHabitData {
 	const hourCounts = new Array<number>(24).fill(0);
 	const weekdayCounts = new Array<number>(7).fill(0);
@@ -436,10 +400,6 @@ export interface WorkHabitCell {
 	count: number;
 }
 
-/**
- * Full hour × weekday matrix (viewer-local time), including zero cells so
- * the grid layout stays stable. Powers the punchcard-style bubble chart.
- */
 export function getWorkHabitMatrix(events: GithubEvent[]): WorkHabitCell[] {
 	const counts = new Map<string, number>();
 	for (const event of events) {

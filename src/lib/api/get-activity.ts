@@ -4,10 +4,6 @@ import { githubFetch, throwForStatus } from "./client";
 
 export const ACTIVITY_QUERY_KEY = "activity";
 
-/**
- * Safety cap on pages followed. Timelines hold ~300 events, but the
- * `Link: rel="next"` header (not page size) decides when to stop.
- */
 const MAX_PAGES = 10;
 
 function getNextPage(linkHeader: string | null): string | null {

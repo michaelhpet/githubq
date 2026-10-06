@@ -19,8 +19,6 @@ export function WorkTypeRadar({
 	breakdown: BreakdownPoint[];
 	ownership: WorkTypeOwnership[];
 }) {
-	// The radar always shows every axis (zero included) so it keeps its
-	// full shape even when there is no activity in the window.
 	const data =
 		breakdown.length > 0
 			? breakdown

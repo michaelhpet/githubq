@@ -1,13 +1,8 @@
 import type { RepoContributor, RepoLanguages } from "@/lib/api/get-repo-stats";
 import type { GithubRepo } from "@/lib/api/get-repositories";
 
-/** How many top repos to analyse in depth (or fewer when N < 10). */
 export const TOP_REPO_COUNT = 10;
 
-/**
- * Top repos by push recency blended with stars. Forks are excluded —
- * they duplicate upstream work rather than representing the user's own.
- */
 export function pickTopRepos(repos: GithubRepo[]): GithubRepo[] {
 	return repos
 		.filter((repo) => !repo.fork)
@@ -51,10 +46,6 @@ export function aggregateLanguages(
 		.sort((a, b) => b.bytes - a.bytes);
 }
 
-/**
- * Element-wise sum of weekly all-commit series across repos
- * (52 entries each, oldest first). Missing weeks count as zero.
- */
 export function aggregateYearlySeries(
 	series: (number[] | null | undefined)[],
 ): number[] {
@@ -77,11 +68,6 @@ export interface LanguageInsights {
 	mostRecent: { language: string; pushedAt: string } | null;
 }
 
-/**
- * Headline facts about language usage: top language by bytes, how many
- * languages appear at all, which language earned the most stars, and which
- * was pushed most recently.
- */
 export function getLanguageInsights(
 	repos: GithubRepo[],
 	shares: LanguageShare[],
@@ -252,11 +238,6 @@ const LANGUAGE_ECOSYSTEM: Record<string, string> = {
 
 const ECOSYSTEM_SUBJECTS = ["Frontend", "Backend", "DevOps", "Systems"];
 
-/**
- * Balance across ecosystem areas, counting each repo once per matching
- * area. Repo topics decide first; the primary language is the fallback
- * for untagged repos.
- */
 export function classifyEcosystem(repos: GithubRepo[]): EcosystemSlice[] {
 	const counts: Record<string, number> = {
 		Frontend: 0,

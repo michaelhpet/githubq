@@ -15,11 +15,6 @@ function rateLimitMessage(res: Response): string {
 	return `GitHub API rate limit exceeded${when}`;
 }
 
-/**
- * Authenticated-aware fetch against the GitHub REST API. Pass the user's
- * OAuth token when logged in (5,000 req/hr); omit it for anonymous
- * requests (60 req/hr per IP).
- */
 export async function githubFetch(
 	path: string,
 	token?: string | null,
@@ -33,7 +28,6 @@ export async function githubFetch(
 	return fetch(`https://api.github.com${path}`, { ...init, headers });
 }
 
-/** Throw a descriptive error for non-OK GitHub responses. */
 export function throwForStatus(res: Response, resource: string): void {
 	if (res.status === 403 || res.status === 429) {
 		throw new GitHubApiError(rateLimitMessage(res), res.status);

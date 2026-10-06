@@ -81,7 +81,6 @@ export function Leadership() {
 	);
 
 	if (isLoading || maintenanceLoading) return <LeadershipSkeleton />;
-	// A failed background refresh must not wipe out cached data.
 	if (isError && !repos) {
 		return (
 			<p className="text-sm font-medium text-red-500">

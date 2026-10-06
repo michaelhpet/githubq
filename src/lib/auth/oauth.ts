@@ -30,7 +30,6 @@ export interface PendingLogin {
 	state: string;
 }
 
-/** Build the github.com authorize URL (PKCE, no scopes = public data only). */
 export async function buildAuthorizeUrl(): Promise<PendingLogin> {
 	const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID as string | undefined;
 	if (!clientId) {
@@ -64,7 +63,6 @@ export interface CompletedLogin {
 	returnTo: string;
 }
 
-/** Verify state, exchange the code via our server function, persist nothing. */
 export async function completeLogin(
 	code: string,
 	state: string,

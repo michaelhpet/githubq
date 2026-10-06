@@ -26,13 +26,9 @@ async function fetchRepo<T>(
 	token?: string | null,
 ): Promise<T | null> {
 	const res = await githubFetch(`/repos/${fullName}/${path}`, token);
-	// GitHub returns 202 while crunching stats, or 204/404 when unavailable.
 	if (res.status === 202 || res.status === 204 || res.status === 404) {
 		return null;
 	}
-	// A 403 without exhausted quota means the data itself is unavailable
-	// (e.g. contributor list too large) — not a rate limit. Don't let one
-	// repo's missing piece fail the whole batch.
 	if (res.status === 403 && res.headers.get("x-ratelimit-remaining") !== "0") {
 		return null;
 	}
@@ -70,7 +66,6 @@ export async function getRepoContributors(
 		"contributors?per_page=5&anon=1",
 		token,
 	);
-	// Anonymous contributors have no id — generate one so list keys stay unique.
 	return response?.map((r) => ({ ...r, id: r.id ?? randomId() })) ?? [];
 }
 

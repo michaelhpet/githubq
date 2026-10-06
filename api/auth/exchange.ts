@@ -1,13 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-/**
- * Exchanges a GitHub OAuth authorization code (+ PKCE verifier) for a
- * user access token. The client secret lives only here, server-side —
- * it must never be shipped to the browser.
- *
- * POST /api/auth/exchange  { code, codeVerifier?, redirectUri? }
- *   -> 200 { access_token } | 4xx/5xx { error }
- */
 export default async function handler(
 	req: VercelRequest,
 	res: VercelResponse,

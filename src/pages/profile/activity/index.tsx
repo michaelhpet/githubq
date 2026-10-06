@@ -110,17 +110,16 @@ export function Activity() {
 		isError: eventsError,
 		error: eventsFetchError,
 	} = useActivity(username);
-	const { data: repos } = useRepositories(username);
+	const { data: repos, isLoading: reposLoading } = useRepositories(username);
 	const topRepos = repos ? pickTopRepos(repos) : [];
 	const { data: repoStats, isLoading: repoStatsLoading } = useRepoStats(
 		topRepos.map((repo) => repo.full_name),
 	);
+	const repoSectionsLoading = reposLoading || repoStatsLoading;
 	const { data: allTimePRsData, isLoading: allTimePRsQueryLoading } =
 		useAllTimeMergedPRs(username);
 	const { data: yearData } = useYearContributions(username);
 
-	// Auth-only metrics (all-time PR search, yearly GraphQL
-	// calendar/ownership) are hidden for anonymous users.
 	const allTimePRs = isAuthed ? allTimePRsData : undefined;
 	const allTimePRsLoading = isAuthed ? allTimePRsQueryLoading : false;
 	const visibleYearData = isAuthed ? yearData : undefined;
@@ -151,8 +150,6 @@ export function Activity() {
 	const weeklyOwnership = hasEvents
 		? getWeeklyOwnership(events, username ?? "")
 		: [];
-	// Authenticated users get the true yearly calendar; everyone else
-	// falls back to the trailing public-events window.
 	const matrix = visibleYearData
 		? {
 				total: visibleYearData.total,
@@ -183,7 +180,7 @@ export function Activity() {
 		<div className="flex flex-col gap-6">
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Past year</h3>
-				{repoStatsLoading ? (
+				{repoSectionsLoading ? (
 					<div className="flex flex-col gap-2">
 						<Skeleton className="h-36 w-full" />
 						<div className="flex items-center justify-between">
@@ -251,7 +248,7 @@ export function Activity() {
 			)}
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Languages & ecosystem</h3>
-				{repoStatsLoading ? (
+				{repoSectionsLoading ? (
 						<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
 							<div className="flex flex-col gap-2">
 								<Skeleton className="h-5 w-24" />

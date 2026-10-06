@@ -12,7 +12,6 @@ import type { EcosystemSlice, LanguageShare } from "@/lib/repos/stats";
 const CELL_COLORS = ["#0c8ce9", "#8b949e", "#30a14e", "#e3b341", "#a371f7"];
 const OTHER_COLOR = "#6e7681";
 
-/** How many top languages get their own cell; the rest fold into Other. */
 const TOP_CELL_COUNT = 8;
 
 interface LanguageCell {

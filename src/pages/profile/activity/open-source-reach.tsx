@@ -58,9 +58,6 @@ export function OpenSourceReach({
 	weekly: WeeklyOwnership[];
 	isAuthed?: boolean;
 }) {
-	// Auth-only metrics (all-time search total/list, yearly GraphQL
-	// ownership) are hidden for anonymous users; they see the recent
-	// public-events window instead.
 	const visibleAllTime = isAuthed ? allTime : [];
 	const visibleAllTimeTotal = isAuthed ? allTimeTotal : null;
 	const visibleYearly = isAuthed ? yearly : null;

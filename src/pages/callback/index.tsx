@@ -8,7 +8,6 @@ export function Callback() {
 	const navigate = useNavigate();
 	const { storeToken } = useSession();
 	const [error, setError] = useState<string | null>(null);
-	// StrictMode double-invokes effects; the code is single-use, so guard.
 	const started = useRef(false);
 
 	useEffect(() => {

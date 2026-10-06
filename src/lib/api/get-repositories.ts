@@ -4,7 +4,6 @@ import { githubFetch, throwForStatus } from "./client";
 
 export const REPOSITORIES_QUERY_KEY = "repositories";
 
-/** Cap repo listing pages (100 repos/page). */
 const MAX_PAGES = 3;
 
 export interface GithubRepo {

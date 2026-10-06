@@ -10,7 +10,6 @@ const LEVELS = [
 	"bg-[rgb(var(--heat-4))]",
 ];
 
-/** A month earns a label only if it spans this many week columns. */
 const MIN_LABEL_WEEKS = 3;
 
 function levelFor(count: number, max: number): number {
@@ -48,8 +47,6 @@ export function ContributionMatrix({ days }: { days: ContributionDay[] }) {
 	const counts = new Map(days.map((day) => [day.date, day.count]));
 	const max = days.reduce((top, day) => Math.max(top, day.count), 0);
 
-	// The grid always spans a full year ending today; days without
-	// datapoints simply render as empty boxes.
 	const today = new Date();
 	today.setUTCHours(0, 0, 0, 0);
 	const end = addDays(today, 6 - today.getUTCDay());

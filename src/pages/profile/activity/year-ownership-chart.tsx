@@ -27,7 +27,6 @@ function OwnershipTooltip({
 	return (
 		<div className="rounded-lg border border-stroke bg-paper px-2 py-1 text-xs text-foreground">
 			<p className="font-medium">{String(label)}</p>
-			{/* Stacked payload arrives top segment first; show own first. */}
 			{[...payload].reverse().map((entry) => (
 				<p key={entry.name} className="text-dim">
 					{entry.name}:{" "}
