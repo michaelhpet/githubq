@@ -1,3 +1,4 @@
+import { IconLoader2 } from "@tabler/icons-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
@@ -65,8 +66,19 @@ export function Developer() {
 				<Button variant="outlined" onClick={() => void auditAgain()}>
 					Audit again
 				</Button>
-				<Button onClick={() => void download()}>
-					{downloading ? "Preparing…" : "Download"}
+				<Button onClick={() => void download()} disabled={downloading}>
+					{downloading ? (
+						<>
+							<IconLoader2
+								size={16}
+								className="animate-spin"
+								aria-hidden="true"
+							/>
+							Downloading…
+						</>
+					) : (
+						"Download"
+					)}
 				</Button>
 			</div>
 		</div>

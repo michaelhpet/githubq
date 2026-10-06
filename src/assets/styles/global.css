@@ -42,8 +42,7 @@ body {
 	color: rgb(var(--foreground));
 }
 
-html.exporting,
-html.exporting.dark {
+.pdf-export-surface {
 	--foreground: 30 30 30;
 	--background: 255 255 255;
 	--dark: 229 231 235;
@@ -58,21 +57,21 @@ html.exporting.dark {
 	--heat-4: 33 110 57;
 }
 
-html.exporting .print\:hidden {
+.pdf-export-surface .print\:hidden {
 	display: none;
 }
 
-html.exporting .print\:grid-cols-2 {
+.pdf-export-surface .print\:grid-cols-2 {
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-html.exporting .recharts-tooltip-wrapper {
+.pdf-export-surface .recharts-tooltip-wrapper {
 	display: none !important;
 }
 
-html.exporting *,
-html.exporting *::before,
-html.exporting *::after {
+.pdf-export-surface *,
+.pdf-export-surface *::before,
+.pdf-export-surface *::after {
 	animation: none !important;
 	transition: none !important;
 }
