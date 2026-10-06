@@ -8,6 +8,7 @@ import {
 	Navigate,
 	RouterProvider,
 } from "react-router-dom";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthProvider } from "@/lib/auth/session";
 import { persistBuster, queryClient, queryPersister } from "@/lib/query-client";
 import { AppLayout } from "./layouts";
@@ -40,6 +41,7 @@ async function boot(): Promise<void> {
 	}
 	root.render(
 		<React.StrictMode>
+			<ErrorBoundary>
 			<PersistQueryClientProvider
 				client={queryClient}
 				persistOptions={{
@@ -70,6 +72,7 @@ async function boot(): Promise<void> {
 				</React.Suspense>
 			)}
 		</PersistQueryClientProvider>
+		</ErrorBoundary>
 	</React.StrictMode>,
 	);
 }
