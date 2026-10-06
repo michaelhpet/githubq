@@ -64,15 +64,14 @@ export function WorkTypeRadar({
 							</p>
 							{ownership.map((entry) => {
 								const total = entry.own + entry.external;
-								const ownPercent =
-									total > 0 ? (entry.own / total) * 100 : 50;
+								const ownPercent = total > 0 ? (entry.own / total) * 100 : 50;
 								return (
 									<div key={entry.type} className="flex flex-col gap-1">
 										<div className="flex items-center justify-between gap-2 text-xs">
 											<span className="font-medium">{entry.type}</span>
 											<span className="text-dim">
 												{entry.own.toLocaleString()} own ·{" "}
-												{entry.external.toLocaleString()} ext
+												{entry.external.toLocaleString()} external
 											</span>
 										</div>
 										<div className="flex h-2 overflow-hidden rounded-full">

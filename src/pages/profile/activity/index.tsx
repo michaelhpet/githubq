@@ -192,13 +192,13 @@ export function Activity() {
 				) : yearlyTotal > 0 ? (
 					<>
 						<p className="text-sm text-dim">
-							All commits to top repositories · past 52 weeks
+							All commits to top repositories in the past year
 						</p>
 						<YearOverview series={yearlySeries} />
 					</>
 				) : (
 					<p className="text-sm text-dim">
-						No commits to these repositories in the past year.
+						No commits to top repositories in the past year.
 					</p>
 				)}
 			</article>
@@ -240,7 +240,10 @@ export function Activity() {
 				<article className="flex flex-col gap-2">
 					<h3 className="text-lg font-bold">Breakdown of work type</h3>
 					{hasEvents && breakdown ? (
-						<WorkTypeRadar breakdown={breakdown} ownership={workTypeOwnership} />
+						<WorkTypeRadar
+							breakdown={breakdown}
+							ownership={workTypeOwnership}
+						/>
 					) : (
 						<p className="text-sm text-dim">No activity in this window.</p>
 					)}
@@ -249,25 +252,25 @@ export function Activity() {
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Languages & ecosystem</h3>
 				{repoSectionsLoading ? (
-						<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
-							<div className="flex flex-col gap-2">
-								<Skeleton className="h-5 w-24" />
-								<Skeleton className="h-4 w-56" />
-								<Skeleton className="h-64 w-full" />
-							</div>
-							<div className="flex flex-col gap-2">
-								<Skeleton className="h-5 w-40" />
-								<Skeleton className="h-4 w-64" />
-								<Skeleton className="h-64 w-full" />
-							</div>
+					<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+						<div className="flex flex-col gap-2">
+							<Skeleton className="h-5 w-24" />
+							<Skeleton className="h-4 w-56" />
+							<Skeleton className="h-64 w-full" />
 						</div>
-					) : languageShares.length > 0 ? (
-						<LanguagesEcosystem shares={languageShares} ecosystem={ecosystem} />
-					) : (
-						<p className="text-sm text-dim">
-							No language data for these repositories.
-						</p>
-					)}
+						<div className="flex flex-col gap-2">
+							<Skeleton className="h-5 w-40" />
+							<Skeleton className="h-4 w-64" />
+							<Skeleton className="h-64 w-full" />
+						</div>
+					</div>
+				) : languageShares.length > 0 ? (
+					<LanguagesEcosystem shares={languageShares} ecosystem={ecosystem} />
+				) : (
+					<p className="text-sm text-dim">
+						No language data for top repositories.
+					</p>
+				)}
 			</article>
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Open source reach</h3>
