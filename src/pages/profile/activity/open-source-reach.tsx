@@ -15,17 +15,25 @@ interface Item {
 	url: string;
 }
 
-export function OpenSourceReachSkeleton() {
+export function OpenSourceReachSkeleton({
+	isAuthed = true,
+}: {
+	isAuthed?: boolean;
+}) {
 	return (
-		<div className="flex flex-col gap-2">
+		<div className="flex flex-col gap-4">
 			<Skeleton className="h-5 w-56" />
-			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
-				<Skeleton className="h-64 w-full" />
-				<Skeleton className="h-56 w-full" />
+			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 print:grid-cols-2">
+				{isAuthed && <Skeleton className="h-64 w-full" />}
+				<div
+					className={`flex flex-col gap-2 ${isAuthed ? "" : "md:col-span-2"}`}
+				>
+					<Skeleton className="h-5 w-32" />
+					<Skeleton className="h-4 w-56" />
+					<Skeleton className="h-56 w-full" />
+				</div>
 			</div>
-			<div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-				<Skeleton className="h-16 w-full" />
-				<Skeleton className="h-16 w-full" />
+			<div className="flex flex-col gap-2">
 				<Skeleton className="h-16 w-full" />
 				<Skeleton className="h-16 w-full" />
 			</div>
@@ -40,6 +48,7 @@ export function OpenSourceReach({
 	allTimeLoading,
 	yearly,
 	weekly,
+	isAuthed = true,
 }: {
 	recent: ExternalPullRequest[];
 	allTime: AllTimePullRequest[];
@@ -47,10 +56,17 @@ export function OpenSourceReach({
 	allTimeLoading: boolean;
 	yearly: YearOwnership[] | null;
 	weekly: WeeklyOwnership[];
+	isAuthed?: boolean;
 }) {
+	// Auth-only metrics (all-time search total/list, yearly GraphQL
+	// ownership) are hidden for anonymous users; they see the recent
+	// public-events window instead.
+	const visibleAllTime = isAuthed ? allTime : [];
+	const visibleAllTimeTotal = isAuthed ? allTimeTotal : null;
+	const visibleYearly = isAuthed ? yearly : null;
 	const items: Item[] =
-		allTime.length > 0
-			? allTime.slice(0, 5).map((pr) => ({
+		visibleAllTime.length > 0
+			? visibleAllTime.slice(0, 5).map((pr) => ({
 					key: `${pr.repo}#${pr.number}`,
 					title: `${pr.title} #${pr.number}`,
 					subtitle: pr.repo,
@@ -64,9 +80,13 @@ export function OpenSourceReach({
 				}));
 
 	if (allTimeLoading && items.length === 0) {
-		return <OpenSourceReachSkeleton />;
+		return <OpenSourceReachSkeleton isAuthed={isAuthed} />;
 	}
-	if (allTimeTotal === null && items.length === 0 && !yearly) {
+	if (
+		visibleAllTimeTotal === null &&
+		items.length === 0 &&
+		!visibleYearly
+	) {
 		return (
 			<p className="text-sm text-dim">
 				No pull requests merged into external repositories found.
@@ -77,38 +97,46 @@ export function OpenSourceReach({
 		<div className="flex flex-col gap-4">
 			<p className="text-sm">
 				<span className="font-bold">
-					{(allTimeTotal ?? recent.length).toLocaleString()}
+					{(visibleAllTimeTotal ?? recent.length).toLocaleString()}
 				</span>{" "}
 				merged pull request
-				{(allTimeTotal ?? recent.length) === 1 ? "" : "s"}
+				{(visibleAllTimeTotal ?? recent.length) === 1 ? "" : "s"}
 				<span className="text-dim">
 					{" "}
 					·{" "}
-					{allTime.length > 0
+					{visibleAllTime.length > 0
 						? "all time · all repositories"
 						: "in this window · external only"}
 				</span>
 			</p>
 			<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 print:grid-cols-2">
-				{yearly && (
+				{visibleYearly && (
 					<div className="flex flex-col gap-2">
 						<p className="text-sm font-medium">
 							Past year by contribution type
 						</p>
-						<YearOwnershipChart data={yearly} />
+						<YearOwnershipChart data={visibleYearly} />
 					</div>
 				)}
 				<div
-					className={`flex flex-col gap-2 self-stretch ${yearly ? "" : "md:col-span-2"}`}
+					className={`flex flex-col gap-2 self-stretch ${visibleYearly ? "" : "md:col-span-2"}`}
 				>
 					<p className="text-sm font-medium">Recent weeks</p>
-					<p className="text-xs text-dim">Own vs external activity per week.</p>
-					<WeeklyOwnershipChart data={weekly} />
+					{weekly.some((week) => week.own + week.external > 0) ? (
+						<>
+							<p className="text-xs text-dim">
+								Own vs external activity per week.
+							</p>
+							<WeeklyOwnershipChart data={weekly} />
+						</>
+					) : (
+						<p className="text-xs text-dim">No activity in recent weeks.</p>
+					)}
 				</div>
 			</div>
 			{items.length > 0 && (
 				<div className="flex flex-col gap-2">
-					{allTime.length > 0 && (
+					{visibleAllTime.length > 0 && (
 						<p className="text-xs text-dim">
 							Most recent in external repositories:
 						</p>

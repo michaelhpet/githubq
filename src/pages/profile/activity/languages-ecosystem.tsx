@@ -5,128 +5,149 @@ import {
 	RadarChart,
 	ResponsiveContainer,
 	Tooltip,
+	Treemap,
 } from "recharts";
-import type {
-	EcosystemSlice,
-	LanguageInsights,
-	LanguageShare,
-} from "@/lib/repos/stats";
+import type { EcosystemSlice, LanguageShare } from "@/lib/repos/stats";
 
-const STRIP_COLORS = ["#0c8ce9", "#8b949e", "#30a14e", "#e3b341", "#a371f7"];
+const CELL_COLORS = ["#0c8ce9", "#8b949e", "#30a14e", "#e3b341", "#a371f7"];
+const OTHER_COLOR = "#6e7681";
 
-function LanguageStrip({ shares }: { shares: LanguageShare[] }) {
-	const top = shares.slice(0, 5);
-	const rest = shares.slice(5);
-	const restPercent = rest.reduce((sum, share) => sum + share.percent, 0);
-	const segments = [
-		...top.map((share, i) => ({
-			key: share.language,
-			label: `${share.language} ${share.percent.toFixed(1)}%`,
-			percent: share.percent,
-			color: STRIP_COLORS[i % STRIP_COLORS.length],
-		})),
-		...(rest.length > 0
-			? [
-					{
-						key: "Other",
-						label: `Other ${restPercent.toFixed(1)}%`,
-						percent: restPercent,
-						color: "#6e7681",
-					},
-				]
-			: []),
-	];
-	return (
-		<div className="flex flex-col gap-2">
-			<div className="flex h-3 overflow-hidden rounded-full">
-				{segments.map((segment) => (
-					<div
-						key={segment.key}
-						title={segment.label}
-						style={{
-							width: `${segment.percent}%`,
-							backgroundColor: segment.color,
-						}}
-					/>
-				))}
-			</div>
-			<ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-dim">
-				{segments.map((segment) => (
-					<li key={segment.key} className="flex items-center gap-1">
-						<span
-							aria-hidden="true"
-							className="h-2 w-2 rounded-full"
-							style={{ backgroundColor: segment.color }}
-						/>
-						{segment.label}
-					</li>
-				))}
-			</ul>
-		</div>
-	);
+/** How many top languages get their own cell; the rest fold into Other. */
+const TOP_CELL_COUNT = 8;
+
+interface LanguageCell {
+	name: string;
+	size: number;
+	percent: number;
+	fill: string;
+	[key: string]: string | number;
 }
 
-function Insight({ label, value }: { label: string; value: string }) {
+function formatBytes(bytes: number): string {
+	if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+	if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+	return `${bytes} B`;
+}
+
+function TreemapTooltip({
+	active,
+	payload,
+}: {
+	active?: boolean;
+	payload?: { payload?: LanguageCell }[];
+}) {
+	const datum = payload?.[0]?.payload;
+	if (!active || !datum) return null;
 	return (
-		<div className="flex flex-col gap-1 rounded-lg border border-stroke bg-background p-3">
-			<p className="text-sm text-dim">{label}</p>
-			<p className="truncate text-xl font-bold" title={value}>
-				{value}
+		<div className="rounded-lg border border-stroke bg-paper px-2 py-1 text-xs text-foreground">
+			<p className="font-medium">{datum.name}</p>
+			<p className="text-dim">
+				{datum.percent.toFixed(1)}% · {formatBytes(datum.size)}
 			</p>
 		</div>
 	);
 }
 
-function formatMonthYear(iso: string): string {
-	return new Date(iso).toLocaleDateString("default", {
-		year: "numeric",
-		month: "short",
-	});
+interface TreemapContentProps {
+	x?: number;
+	y?: number;
+	width?: number;
+	height?: number;
+	depth?: number;
+	name?: string;
+	index?: number;
+}
+
+function LanguagesTreemap({ shares }: { shares: LanguageShare[] }) {
+	const top = shares.slice(0, TOP_CELL_COUNT);
+	const rest = shares.slice(TOP_CELL_COUNT);
+	const restBytes = rest.reduce((sum, share) => sum + share.bytes, 0);
+	const restPercent = rest.reduce((sum, share) => sum + share.percent, 0);
+	const cells: LanguageCell[] = [
+		...top.map((share, i) => ({
+			name: share.language,
+			size: share.bytes,
+			percent: share.percent,
+			fill: CELL_COLORS[i % CELL_COLORS.length],
+		})),
+		...(rest.length > 0
+			? [
+					{
+						name: "Other",
+						size: restBytes,
+						percent: restPercent,
+						fill: OTHER_COLOR,
+					},
+				]
+			: []),
+	];
+	const fillByName = new Map(cells.map((cell) => [cell.name, cell.fill]));
+	const percentByName = new Map(cells.map((cell) => [cell.name, cell.percent]));
+
+	function content(props: TreemapContentProps) {
+		const { x = 0, y = 0, width = 0, height = 0, depth, name } = props;
+		const showLabel = depth === 1 && width > 64 && height > 28;
+		return (
+			<g>
+				<rect
+					x={x}
+					y={y}
+					width={width}
+					height={height}
+					rx={4}
+					style={{
+						fill: depth === 1 ? (fillByName.get(name ?? "") ?? OTHER_COLOR) : "transparent",
+						stroke: "rgb(var(--paper))",
+						strokeWidth: 2,
+					}}
+				/>
+				{showLabel && (
+					<text
+						x={x + width / 2}
+						y={y + height / 2}
+						textAnchor="middle"
+						dominantBaseline="middle"
+						fill="#fff"
+						fontSize={12}
+						fontWeight={500}
+					>
+						{name} {(percentByName.get(name ?? "") ?? 0).toFixed(1)}%
+					</text>
+				)}
+			</g>
+		);
+	}
+
+	return (
+		<div className="h-64 w-full">
+			<ResponsiveContainer width="100%" height="100%">
+				<Treemap data={cells} dataKey="size" content={content}>
+					<Tooltip content={<TreemapTooltip />} />
+				</Treemap>
+			</ResponsiveContainer>
+		</div>
+	);
 }
 
 export function LanguagesEcosystem({
 	shares,
 	ecosystem,
-	insights,
 }: {
 	shares: LanguageShare[];
 	ecosystem: EcosystemSlice[];
-	insights: LanguageInsights;
 }) {
 	if (shares.length === 0) return null;
+	const hasEcosystem = ecosystem.some((slice) => slice.value > 0);
 	return (
-		<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
-			<div className="flex flex-col gap-4">
-				<div className="flex flex-col gap-2">
-					<p className="text-sm font-medium">Languages</p>
-					<LanguageStrip shares={shares} />
-					<p className="text-xs text-dim">By bytes across top repositories.</p>
-				</div>
-				<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
-					<Insight
-						label="Primary language"
-						value={insights.primary ? insights.primary.language : "—"}
-					/>
-					<Insight label="Languages used" value={`${insights.count}`} />
-					<Insight
-						label="Most starred"
-						value={
-							insights.mostStarred
-								? `${insights.mostStarred.language} · ${insights.mostStarred.stars.toLocaleString()}★`
-								: "—"
-						}
-					/>
-					<Insight
-						label="Most recent"
-						value={
-							insights.mostRecent
-								? `${insights.mostRecent.language} · ${formatMonthYear(insights.mostRecent.pushedAt)}`
-								: "—"
-						}
-					/>
-				</div>
+		<div
+			className={`grid grid-cols-1 items-start gap-4 ${hasEcosystem ? "md:grid-cols-2" : ""}`}
+		>
+			<div className="flex flex-col gap-2">
+				<p className="text-sm font-medium">Languages</p>
+				<p className="text-xs text-dim">By bytes across top repositories.</p>
+				<LanguagesTreemap shares={shares} />
 			</div>
-			{ecosystem.some((slice) => slice.value > 0) && (
+			{hasEcosystem && (
 				<div className="flex flex-col gap-2">
 					<p className="text-sm font-medium">Ecosystem balance</p>
 					<p className="text-xs text-dim">

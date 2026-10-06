@@ -42,7 +42,7 @@ function WeeklyTooltip({
 
 export function WeeklyOwnershipChart({ data }: { data: WeeklyOwnership[] }) {
 	if (data.every((week) => week.own + week.external === 0)) {
-		return <p className="text-sm text-dim">No activity in recent weeks.</p>;
+		return <p className="text-xs text-dim">No activity in recent weeks.</p>;
 	}
 	return (
 		<div className="min-h-56 w-full flex-1 text-dim">

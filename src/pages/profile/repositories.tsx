@@ -9,10 +9,16 @@ const compactCount = new Intl.NumberFormat("default", { notation: "compact" });
 
 function RepositoriesSkeleton() {
 	return (
-		<div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-3">
-			<Skeleton className="h-28 w-full" />
-			<Skeleton className="h-28 w-full" />
-			<Skeleton className="h-28 w-full" />
+		<div className="flex flex-col gap-2">
+			<div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-3">
+				<Skeleton className="h-28 w-full" />
+				<Skeleton className="h-28 w-full" />
+				<Skeleton className="h-28 w-full" />
+				<Skeleton className="h-28 w-full" />
+				<Skeleton className="h-28 w-full" />
+				<Skeleton className="h-28 w-full" />
+			</div>
+			<Skeleton className="h-4 w-64" />
 		</div>
 	);
 }
@@ -56,7 +62,7 @@ export function Repositories() {
 
 	return (
 		<div className="flex flex-col gap-2">
-			<div className="grid grid-cols-[repeat(auto-fill,minmax(min(300px,100%),1fr))] gap-3">
+			<div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-3">
 				{topRepos.map((repo) => {
 					const contributors =
 						contributorsByRepo.get(repo.full_name)?.slice(0, 3) ?? [];

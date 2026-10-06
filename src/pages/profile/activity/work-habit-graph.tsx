@@ -45,6 +45,7 @@ export function WorkHabitGraph({ cells }: { cells: WorkHabitCell[] }) {
 						<XAxis
 							dataKey="day"
 							type="category"
+							allowDuplicatedCategory={false}
 							tick={{ fill: "currentColor", fontSize: 12 }}
 							tickLine={false}
 							axisLine={false}

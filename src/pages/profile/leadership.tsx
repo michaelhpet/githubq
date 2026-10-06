@@ -42,19 +42,27 @@ function Metric({ label, value }: { label: string; value: string }) {
 function LeadershipSkeleton() {
 	return (
 		<div className="flex flex-col gap-6">
-			<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
-				<Skeleton className="h-20 w-full" />
-				<Skeleton className="h-20 w-full" />
-			</div>
-			<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
-				<Skeleton className="h-20 w-full" />
-				<Skeleton className="h-20 w-full" />
-				<Skeleton className="h-20 w-full" />
-			</div>
-			<div className="flex flex-col gap-2">
+			<article className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-36" />
+				<div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-3">
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+				</div>
+				<Skeleton className="h-4 w-64" />
+			</article>
+			<article className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-56" />
+				<div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-3">
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+					<Skeleton className="h-20 w-full" />
+				</div>
+			</article>
+			<article className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-44" />
 				<Skeleton className="h-16 w-full" />
 				<Skeleton className="h-16 w-full" />
-			</div>
+			</article>
 		</div>
 	);
 }
@@ -108,7 +116,7 @@ export function Leadership() {
 		<div className="flex flex-col gap-6">
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Maintenance</h3>
-				<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
+				<div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-3">
 					<Metric label="Avg issue close" value={formatDays(avgIssueClose)} />
 					<Metric label="Avg PR close" value={formatDays(avgPRClose)} />
 				</div>
@@ -119,7 +127,7 @@ export function Leadership() {
 			</article>
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Documentation & quality</h3>
-				<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
+				<div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-3">
 					<Metric
 						label="Detailed READMEs"
 						value={`${detailedReadmes}/${maintained.length}`}

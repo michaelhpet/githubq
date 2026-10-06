@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Skeleton } from "@/components/skeleton";
+import { useSession } from "@/lib/auth/session";
 import {
 	buildContributionWindow,
 	getActivityPatterns,
@@ -7,17 +8,17 @@ import {
 	getWeeklyOwnership,
 	getWorkHabitMatrix,
 	getWorkTypeBreakdown,
+	getWorkTypeOwnership,
 } from "@/lib/activity/stats";
 import { useActivity } from "@/lib/api/get-activity";
 import { useYearContributions } from "@/lib/api/get-contributions";
 import { useRepoStats } from "@/lib/api/get-repo-stats";
 import { useRepositories } from "@/lib/api/get-repositories";
-import { useAllTimeMergedPRs, useLifetimeCounts } from "@/lib/api/search";
+import { useAllTimeMergedPRs } from "@/lib/api/search";
 import {
 	aggregateLanguages,
 	aggregateYearlySeries,
 	classifyEcosystem,
-	getLanguageInsights,
 	pickTopRepos,
 } from "@/lib/repos/stats";
 import { ActivityHighlights } from "./activity-highlights";
@@ -28,50 +29,81 @@ import { WorkHabitGraph } from "./work-habit-graph";
 import { WorkTypeRadar } from "./work-type-radar";
 import { YearOverview } from "./year-overview";
 
-function ActivitySkeleton() {
+function ActivitySkeleton({ isAuthed = true }: { isAuthed?: boolean }) {
 	return (
 		<div className="flex flex-col gap-6">
-			<div className="flex flex-col gap-2">
+			<article className="flex flex-col gap-2">
 				<Skeleton className="h-7 w-48" />
 				<Skeleton className="h-5 w-72" />
-				<Skeleton className="h-[168px] w-full" />
-			</div>
-			<div className="flex flex-col gap-2">
-				<Skeleton className="h-7 w-64" />
-				<Skeleton className="h-5 w-80" />
 				<Skeleton className="h-36 w-full" />
-			</div>
-			<div className="flex flex-col gap-2">
-				<Skeleton className="h-7 w-52" />
-				<Skeleton className="h-72 w-full" />
-			</div>
-			<div className="flex flex-col gap-2">
-				<Skeleton className="h-7 w-56" />
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-					<Skeleton className="h-32 w-full" />
-					<Skeleton className="h-64 w-full" />
-				</div>
-			</div>
-			<div className="flex flex-col gap-2">
+				<Skeleton className="h-4 w-64" />
+			</article>
+			<article className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-40" />
+				<Skeleton className="h-80 w-full" />
+				<Skeleton className="h-4 w-72" />
+			</article>
+			<article className="flex flex-col gap-2">
 				<Skeleton className="h-7 w-36" />
-				<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
-					<Skeleton className="h-20 w-full" />
+				<div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-3">
 					<Skeleton className="h-20 w-full" />
 					<Skeleton className="h-20 w-full" />
 					<Skeleton className="h-20 w-full" />
 					<Skeleton className="h-20 w-full" />
 				</div>
-			</div>
-			<div className="flex flex-col gap-2">
+				<Skeleton className="h-4 w-64" />
+			</article>
+			{isAuthed && (
+				<article className="flex flex-col gap-2">
+					<Skeleton className="h-7 w-64" />
+					<Skeleton className="h-5 w-80" />
+					<Skeleton className="h-36 w-full" />
+				</article>
+			)}
+			{isAuthed && (
+				<article className="flex flex-col gap-4">
+					<Skeleton className="h-7 w-52" />
+					<Skeleton className="h-5 w-64" />
+					<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+						<Skeleton className="h-72 w-full" />
+						<div className="flex flex-col gap-3">
+							<Skeleton className="h-5 w-40" />
+							<Skeleton className="h-8 w-full" />
+							<Skeleton className="h-8 w-full" />
+							<Skeleton className="h-8 w-full" />
+							<Skeleton className="h-8 w-full" />
+							<Skeleton className="h-8 w-full" />
+						</div>
+					</div>
+				</article>
+			)}
+			<article className="flex flex-col gap-2">
+				<Skeleton className="h-7 w-56" />
+				<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+					<div className="flex flex-col gap-2">
+						<Skeleton className="h-5 w-24" />
+						<Skeleton className="h-4 w-56" />
+						<Skeleton className="h-64 w-full" />
+					</div>
+					<div className="flex flex-col gap-2">
+						<Skeleton className="h-5 w-40" />
+						<Skeleton className="h-4 w-64" />
+						<Skeleton className="h-64 w-full" />
+					</div>
+				</div>
+			</article>
+			<article className="flex flex-col gap-2">
 				<Skeleton className="h-7 w-44" />
-				<OpenSourceReachSkeleton />
-			</div>
+				<OpenSourceReachSkeleton isAuthed={isAuthed} />
+			</article>
 		</div>
 	);
 }
 
 export function Activity() {
 	const { username } = useParams();
+	const { token } = useSession();
+	const isAuthed = Boolean(token);
 	const {
 		data: events,
 		isLoading: eventsLoading,
@@ -83,12 +115,18 @@ export function Activity() {
 	const { data: repoStats, isLoading: repoStatsLoading } = useRepoStats(
 		topRepos.map((repo) => repo.full_name),
 	);
-	const { data: lifetime } = useLifetimeCounts(username);
-	const { data: allTimePRs, isLoading: allTimePRsLoading } =
+	const { data: allTimePRsData, isLoading: allTimePRsQueryLoading } =
 		useAllTimeMergedPRs(username);
 	const { data: yearData } = useYearContributions(username);
 
-	if (eventsLoading) return <ActivitySkeleton />;
+	// Auth-only metrics (all-time PR search, yearly GraphQL
+	// calendar/ownership) are hidden for anonymous users.
+	const allTimePRs = isAuthed ? allTimePRsData : undefined;
+	const allTimePRsLoading = isAuthed ? allTimePRsQueryLoading : false;
+	const visibleYearData = isAuthed ? yearData : undefined;
+	const yearly = isAuthed ? (yearData?.ownership ?? null) : null;
+
+	if (eventsLoading) return <ActivitySkeleton isAuthed={isAuthed} />;
 	if (eventsError && !events) {
 		return (
 			<p className="text-sm font-medium text-red-500">
@@ -103,6 +141,9 @@ export function Activity() {
 	const hasEvents = !!events && events.length > 0;
 	const activityWindow = hasEvents ? buildContributionWindow(events) : null;
 	const breakdown = hasEvents ? getWorkTypeBreakdown(events) : null;
+	const workTypeOwnership = hasEvents
+		? getWorkTypeOwnership(events, username ?? "")
+		: [];
 	const patterns = hasEvents ? getActivityPatterns(events) : null;
 	const externalPRs = hasEvents
 		? getExternalMergedPRs(events, username ?? "")
@@ -112,12 +153,12 @@ export function Activity() {
 		: [];
 	// Authenticated users get the true yearly calendar; everyone else
 	// falls back to the trailing public-events window.
-	const matrix = yearData
+	const matrix = visibleYearData
 		? {
-				total: yearData.total,
-				days: yearData.days,
-				start: yearData.start,
-				end: yearData.end,
+				total: visibleYearData.total,
+				days: visibleYearData.days,
+				start: visibleYearData.start,
+				end: visibleYearData.end,
 				caption: "Public contributions",
 			}
 		: activityWindow
@@ -130,84 +171,107 @@ export function Activity() {
 				}
 			: null;
 	const yearlySeries = aggregateYearlySeries(
-		(repoStats ?? []).map((stat) => stat?.participation?.owner),
+		(repoStats ?? []).map((stat) => stat?.participation?.all),
 	);
 	const yearlyTotal = yearlySeries.reduce((sum, count) => sum + count, 0);
 	const languageShares = aggregateLanguages(
 		(repoStats ?? []).map((stat) => stat?.languages),
 	);
 	const ecosystem = classifyEcosystem(topRepos);
-	const languageInsights = getLanguageInsights(topRepos, languageShares);
 
 	return (
 		<div className="flex flex-col gap-6">
-			{(repoStatsLoading || yearlyTotal > 0) && (
-				<article className="flex flex-col gap-2">
-					<h3 className="text-lg font-bold">Past year</h3>
-					<p className="text-sm text-dim">
-						Commits to own top repositories · past 52 weeks
-					</p>
-					{repoStatsLoading ? (
-						<Skeleton className="h-[168px] w-full" />
-					) : (
+			<article className="flex flex-col gap-2">
+				<h3 className="text-lg font-bold">Past year</h3>
+				{repoStatsLoading ? (
+					<div className="flex flex-col gap-2">
+						<Skeleton className="h-36 w-full" />
+						<div className="flex items-center justify-between">
+							<Skeleton className="h-4 w-24" />
+							<Skeleton className="h-4 w-24" />
+							<Skeleton className="h-4 w-12" />
+						</div>
+					</div>
+				) : yearlyTotal > 0 ? (
+					<>
+						<p className="text-sm text-dim">
+							All commits to top repositories · past 52 weeks
+						</p>
 						<YearOverview series={yearlySeries} />
+					</>
+				) : (
+					<p className="text-sm text-dim">
+						No commits to these repositories in the past year.
+					</p>
+				)}
+			</article>
+			<article className="flex flex-col gap-2">
+				<h3 className="text-lg font-bold">Work habits</h3>
+				<WorkHabitGraph cells={getWorkHabitMatrix(events ?? [])} />
+			</article>
+			<article className="flex flex-col gap-2">
+				<h3 className="text-lg font-bold">Highlights</h3>
+				{patterns ? (
+					<ActivityHighlights patterns={patterns} />
+				) : (
+					<p className="text-sm text-dim">No activity in this window.</p>
+				)}
+			</article>
+			{isAuthed &&
+				(matrix ? (
+					<article className="flex flex-col gap-2">
+						<h3 className="text-lg font-bold">
+							{matrix.total} contributions
+							{visibleYearData ? " in the past year" : ""}
+						</h3>
+						{matrix.start && matrix.end && (
+							<p className="text-sm text-dim">
+								{matrix.caption} · {matrix.start} – {matrix.end}
+							</p>
+						)}
+						<ContributionMatrix days={matrix.days} />
+					</article>
+				) : (
+					<article className="flex flex-col gap-2">
+						<h3 className="text-lg font-bold">Contributions</h3>
+						<p className="text-sm text-dim">
+							No contributions found for this period.
+						</p>
+					</article>
+				))}
+			{isAuthed && (
+				<article className="flex flex-col gap-2">
+					<h3 className="text-lg font-bold">Breakdown of work type</h3>
+					{hasEvents && breakdown ? (
+						<WorkTypeRadar breakdown={breakdown} ownership={workTypeOwnership} />
+					) : (
+						<p className="text-sm text-dim">No activity in this window.</p>
 					)}
 				</article>
 			)}
-			{matrix ? (
-				<article className="flex flex-col gap-2">
-					<h3 className="text-lg font-bold">
-						{matrix.total} contributions
-						{yearData ? " in the past year" : ""}
-					</h3>
-					{matrix.start && matrix.end && (
+			<article className="flex flex-col gap-2">
+				<h3 className="text-lg font-bold">Languages & ecosystem</h3>
+				{repoStatsLoading ? (
+						<div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+							<div className="flex flex-col gap-2">
+								<Skeleton className="h-5 w-24" />
+								<Skeleton className="h-4 w-56" />
+								<Skeleton className="h-64 w-full" />
+							</div>
+							<div className="flex flex-col gap-2">
+								<Skeleton className="h-5 w-40" />
+								<Skeleton className="h-4 w-64" />
+								<Skeleton className="h-64 w-full" />
+							</div>
+						</div>
+					) : languageShares.length > 0 ? (
+						<LanguagesEcosystem shares={languageShares} ecosystem={ecosystem} />
+					) : (
 						<p className="text-sm text-dim">
-							{matrix.caption} · {matrix.start} – {matrix.end}
+							No language data for these repositories.
 						</p>
 					)}
-					<ContributionMatrix days={matrix.days} />
-				</article>
-			) : null}
-			{hasEvents && breakdown && patterns ? (
-				<>
-					<article className="flex flex-col gap-2">
-						<h3 className="text-lg font-bold">Breakdown of work type</h3>
-						<WorkTypeRadar breakdown={breakdown} lifetime={lifetime ?? null} />
-					</article>
-					<article className="flex flex-col gap-2">
-						<h3 className="text-lg font-bold">Highlights</h3>
-						<ActivityHighlights patterns={patterns} />
-					</article>
-					<article className="flex flex-col gap-2">
-						<h3 className="text-lg font-bold">Work habits</h3>
-						<WorkHabitGraph cells={getWorkHabitMatrix(events)} />
-					</article>
-				</>
-			) : (
-				!matrix && (
-					<p className="text-sm text-dim">
-						No public activity in this window for{" "}
-						<span className="font-medium">{username}</span>.
-					</p>
-				)
-			)}
-			{(repoStatsLoading || languageShares.length > 0) && (
-				<article className="flex flex-col gap-2">
-					<h3 className="text-lg font-bold">Languages & ecosystem</h3>
-					{repoStatsLoading ? (
-						<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-							<Skeleton className="h-32 w-full" />
-							<Skeleton className="h-64 w-full" />
-						</div>
-					) : (
-						<LanguagesEcosystem
-							shares={languageShares}
-							ecosystem={ecosystem}
-							insights={languageInsights}
-						/>
-					)}
-				</article>
-			)}
+			</article>
 			<article className="flex flex-col gap-2">
 				<h3 className="text-lg font-bold">Open source reach</h3>
 				<OpenSourceReach
@@ -215,8 +279,9 @@ export function Activity() {
 					allTime={allTimePRs?.items ?? []}
 					allTimeTotal={allTimePRs?.total ?? null}
 					allTimeLoading={allTimePRsLoading}
-					yearly={yearData?.ownership ?? null}
+					yearly={yearly}
 					weekly={weeklyOwnership}
+					isAuthed={isAuthed}
 				/>
 			</article>
 		</div>

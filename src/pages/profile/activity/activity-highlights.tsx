@@ -18,14 +18,10 @@ export function ActivityHighlights({
 }) {
 	return (
 		<div className="flex flex-col gap-2">
-			<div className="grid grid-cols-[repeat(auto-fill,minmax(min(160px,100%),1fr))] gap-3">
+			<div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-3">
 				<Highlight label="Busiest day" value={patterns.busiestDay ?? "—"} />
 				<Highlight label="Peak hours" value={patterns.peakHours ?? "—"} />
 				<Highlight label="Working style" value={patterns.workingStyle} />
-				<Highlight
-					label="Active days"
-					value={`${patterns.activeDays} day${patterns.activeDays === 1 ? "" : "s"}`}
-				/>
 				<Highlight
 					label="Longest streak"
 					value={`${patterns.longestStreak} day${patterns.longestStreak === 1 ? "" : "s"}`}

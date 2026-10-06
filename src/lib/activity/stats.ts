@@ -20,10 +20,22 @@ function toDayKey(iso: string): string {
 /**
  * Contribution weight of a single event. Pushes count their commits,
  * every other tracked event counts as one contribution.
+ *
+ * GitHub sometimes omits push size info (no `distinct_size`, `size`, or
+ * `commits`); a code push still represents at least one commit, so fall
+ * back to 1 — except for new-ref pushes (zero `before`), which carry no
+ * commits of their own.
  */
 function eventWeight(event: GithubEvent): number {
 	if (event.type === "PushEvent") {
-		return event.payload.size ?? event.payload.commits?.length ?? 0;
+		const size =
+			event.payload.distinct_size ??
+			event.payload.size ??
+			event.payload.commits?.length ??
+			0;
+		if (size > 0) return size;
+		if (event.payload.before && /^0+$/.test(event.payload.before)) return 0;
+		return 1;
 	}
 	return 1;
 }
@@ -60,38 +72,174 @@ export function buildContributionWindow(
 	};
 }
 
-export interface WorkTypeBreakdown {
-	commits: number;
-	pullRequests: number;
-	reviews: number;
-	issues: number;
+export interface BreakdownPoint {
+	type: string;
+	value: number;
+	lifetime?: number;
 }
 
-export function getWorkTypeBreakdown(events: GithubEvent[]): WorkTypeBreakdown {
-	const breakdown: WorkTypeBreakdown = {
-		commits: 0,
-		pullRequests: 0,
-		reviews: 0,
-		issues: 0,
-	};
-	for (const event of events) {
-		switch (event.type) {
-			case "PushEvent":
-				breakdown.commits += eventWeight(event);
-				break;
-			case "PullRequestEvent":
-				if (event.payload.action === "opened") breakdown.pullRequests += 1;
-				break;
-			case "PullRequestReviewEvent":
-			case "PullRequestReviewCommentEvent":
-				breakdown.reviews += 1;
-				break;
-			case "IssuesEvent":
-				if (event.payload.action === "opened") breakdown.issues += 1;
-				break;
-		}
+/**
+ * Every event in the window counts toward exactly one axis, using the
+ * same weights as the heatmap (pushes count their commits, everything
+ * else counts once). Axes with no activity are omitted.
+ */
+function classifyWorkType(event: GithubEvent): { type: string; value: number } {
+	switch (event.type) {
+		case "PushEvent":
+			return { type: "Commits", value: eventWeight(event) };
+		case "PullRequestEvent":
+			return { type: "Pull requests", value: 1 };
+		case "PullRequestReviewEvent":
+			return { type: "Reviews", value: 1 };
+		case "IssuesEvent":
+			return { type: "Issues", value: 1 };
+		case "IssueCommentEvent":
+		case "PullRequestReviewCommentEvent":
+			return { type: "Comments", value: 1 };
+		case "ForkEvent":
+			return { type: "Forks", value: 1 };
+		case "CreateEvent":
+		case "DeleteEvent":
+			return { type: "Branches & tags", value: 1 };
+		case "WatchEvent":
+			return { type: "Stars", value: 1 };
+		default:
+			return { type: "Other activity", value: 1 };
 	}
-	return breakdown;
+}
+
+export const WORK_TYPE_ORDER = [
+	"Commits",
+	"Pull requests",
+	"Reviews",
+	"Issues",
+	"Comments",
+	"Forks",
+	"Branches & tags",
+	"Stars",
+	"Other activity",
+];
+
+export function getWorkTypeBreakdown(events: GithubEvent[]): BreakdownPoint[] {
+	const counts = new Map<string, number>();
+	for (const event of events) {
+		const { type, value } = classifyWorkType(event);
+		counts.set(type, (counts.get(type) ?? 0) + value);
+	}
+	// All axes are always returned (zero included) so the radar keeps its
+	// full shape instead of collapsing to only the active types.
+	return WORK_TYPE_ORDER.map((type) => ({
+		type,
+		value: counts.get(type) ?? 0,
+	}));
+}
+
+function isOwnRepo(event: GithubEvent, username: string): boolean {
+	return (
+		event.repo.name.split("/")[0].toLowerCase() === username.toLowerCase()
+	);
+}
+
+export interface WorkTypeOwnership {
+	type: string;
+	own: number;
+	external: number;
+}
+
+/**
+ * Own vs external split per work type, using the same axes as the radar.
+ * Only types with activity are returned; empty ones are omitted.
+ */
+export function getWorkTypeOwnership(
+	events: GithubEvent[],
+	username: string,
+): WorkTypeOwnership[] {
+	const counts = new Map<string, { own: number; external: number }>();
+	for (const event of events) {
+		const { type, value } = classifyWorkType(event);
+		const bucket = counts.get(type) ?? { own: 0, external: 0 };
+		if (isOwnRepo(event, username)) bucket.own += value;
+		else bucket.external += value;
+		counts.set(type, bucket);
+	}
+	return WORK_TYPE_ORDER.filter(
+		(type) => (counts.get(type)?.own ?? 0) + (counts.get(type)?.external ?? 0) > 0,
+	).map((type) => ({ type, ...(counts.get(type) ?? { own: 0, external: 0 }) }));
+}
+
+export interface WorkTypeMomentum {
+	type: string;
+	firstHalf: number;
+	secondHalf: number;
+	delta: number;
+}
+
+/**
+ * Per-type momentum: activity in the second half of the event window vs
+ * the first half, split at the time midpoint between oldest and newest
+ * event. Positive delta means accelerating.
+ */
+export function getWorkTypeMomentum(events: GithubEvent[]): WorkTypeMomentum[] {
+	if (events.length === 0) return [];
+	const times = events.map((event) =>
+		new Date(event.created_at).getTime(),
+	);
+	const midpoint = (Math.min(...times) + Math.max(...times)) / 2;
+	const counts = new Map<string, { firstHalf: number; secondHalf: number }>();
+	for (const event of events) {
+		const { type, value } = classifyWorkType(event);
+		const bucket = counts.get(type) ?? { firstHalf: 0, secondHalf: 0 };
+		if (new Date(event.created_at).getTime() < midpoint) {
+			bucket.firstHalf += value;
+		} else {
+			bucket.secondHalf += value;
+		}
+		counts.set(type, bucket);
+	}
+	return WORK_TYPE_ORDER.map((type) => {
+		const bucket = counts.get(type) ?? { firstHalf: 0, secondHalf: 0 };
+		return { type, ...bucket, delta: bucket.secondHalf - bucket.firstHalf };
+	});
+}
+
+export interface WorkTypeSummary {
+	archetype: string;
+	topType: string;
+	topPercent: number;
+}
+
+const WORK_TYPE_ARCHETYPES: Record<string, string> = {
+	Commits: "Builder",
+	"Pull requests": "Shipper",
+	Reviews: "Reviewer",
+	Issues: "Triager",
+	Comments: "Collaborator",
+	Forks: "Explorer",
+	"Branches & tags": "Maintainer",
+	Stars: "Curator",
+	"Other activity": "All-rounder",
+};
+
+/**
+ * Headline archetype from the dominant work type. A type holding at
+ * least half of all window activity names the archetype; otherwise the
+ * profile reads as balanced ("All-rounder").
+ */
+export function getWorkTypeSummary(
+	breakdown: BreakdownPoint[],
+): WorkTypeSummary | null {
+	if (breakdown.length === 0) return null;
+	const total = breakdown.reduce((sum, point) => sum + point.value, 0);
+	if (total === 0) return null;
+	const top = breakdown.reduce((best, point) =>
+		point.value > best.value ? point : best,
+	);
+	const topPercent = Math.round((top.value / total) * 100);
+	const archetype =
+		topPercent >= 50
+			? (WORK_TYPE_ARCHETYPES[top.type] ?? "All-rounder")
+			: "All-rounder";
+	return { archetype, topType: top.type, topPercent };
 }
 
 const WEEKDAYS = [

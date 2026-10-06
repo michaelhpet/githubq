@@ -52,7 +52,7 @@ export function aggregateLanguages(
 }
 
 /**
- * Element-wise sum of weekly owner-commit series across repos
+ * Element-wise sum of weekly all-commit series across repos
  * (52 entries each, oldest first). Missing weeks count as zero.
  */
 export function aggregateYearlySeries(

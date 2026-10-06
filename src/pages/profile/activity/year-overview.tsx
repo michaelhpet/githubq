@@ -33,7 +33,7 @@ export function YearOverview({ series }: { series: number[] }) {
 	if (total === 0) {
 		return (
 			<p className="text-sm text-dim">
-				No commits to these repositories in the past 52 weeks.
+				No commits to these repositories in the past year.
 			</p>
 		);
 	}
