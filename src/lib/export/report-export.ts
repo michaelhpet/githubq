@@ -44,6 +44,16 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 	].join(";");
 	const clone = source.cloneNode(true) as HTMLElement;
 	clone.style.width = `${source.offsetWidth}px`;
+	const liveImages = source.querySelectorAll("img");
+	clone.querySelectorAll("img").forEach((img, index) => {
+		const live = liveImages.item(index);
+		if (
+			!img.getAttribute("src") ||
+			(live && live.complete && live.naturalWidth === 0)
+		) {
+			img.remove();
+		}
+	});
 	wrapper.appendChild(clone);
 	document.body.appendChild(wrapper);
 	try {
@@ -66,6 +76,7 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 								cacheBust: true,
 								backgroundColor: "#ffffff",
 								imagePlaceholder: TRANSPARENT_PIXEL,
+								onImageErrorHandler: () => TRANSPARENT_PIXEL,
 								skipFonts,
 							}),
 					);

@@ -68,18 +68,14 @@ export function Developer() {
 					Audit again
 				</Button>
 				<Button onClick={() => void download()} disabled={downloading}>
-					{downloading ? (
-						<>
-							<IconLoader2
-								size={16}
-								className="animate-spin"
-								aria-hidden="true"
-							/>
-							Downloading…
-						</>
-					) : (
-						"Download"
+					{downloading && (
+						<IconLoader2
+							size={16}
+							className="animate-spin"
+							aria-hidden="true"
+						/>
 					)}
+					Download
 				</Button>
 			</div>
 		</div>
