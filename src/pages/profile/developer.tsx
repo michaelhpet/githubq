@@ -28,7 +28,8 @@ export function Developer() {
 		setDownloading(true);
 		try {
 			await exportReportAsPdf(username ?? "github-report");
-		} catch {
+		} catch (error) {
+			console.error("PDF export failed, falling back to print", error);
 			window.print();
 		} finally {
 			setDownloading(false);
