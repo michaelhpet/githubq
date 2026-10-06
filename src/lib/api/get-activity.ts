@@ -24,6 +24,8 @@ export interface GithubEvent {
 	payload: {
 		action?: string;
 		size?: number;
+		distinct_size?: number;
+		before?: string;
 		commits?: unknown[];
 		pull_request?: {
 			number: number;

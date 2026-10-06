@@ -6,28 +6,28 @@ import { ThemeSwitch } from "@/components/theme-switch";
 import { useViewer } from "@/lib/api/get-viewer";
 import { useSession } from "@/lib/auth/session";
 
-function AuthButton() {
-	const { token, login, logout } = useSession();
+function AuthStatus() {
+	const { token, logout } = useSession();
 	const { data: viewer, error } = useViewer();
 
 	useEffect(() => {
 		if (error && token) logout();
 	}, [error, token, logout]);
 
-	if (token && viewer) {
-		return (
-			<div className="flex items-center gap-2">
+	if (!token) return null;
+	return (
+		<div className="flex items-center gap-2">
+			{viewer && (
 				<img
 					src={viewer.avatar_url}
 					alt={viewer.login}
 					title={viewer.login}
 					className="h-8 w-8 rounded-full border border-stroke"
 				/>
-				<Button onClick={logout}>Logout</Button>
-			</div>
-		);
-	}
-	return <Button onClick={login}>Login with GitHub</Button>;
+			)}
+			<Button onClick={logout}>Logout</Button>
+		</div>
+	);
 }
 
 export function AppLayout() {
@@ -41,7 +41,7 @@ export function AppLayout() {
 					</Link>
 					<div className="flex items-center gap-2">
 						<ThemeSwitch />
-						<AuthButton />
+						<AuthStatus />
 					</div>
 				</nav>
 			</header>

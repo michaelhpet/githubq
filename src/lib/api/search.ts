@@ -65,7 +65,10 @@ export function useLifetimeCounts(username: string | undefined) {
 	return useQuery({
 		queryKey: [LIFETIME_COUNTS_QUERY_KEY, username, token ? "authed" : "anon"],
 		queryFn: () => getLifetimeCounts(username as string, token),
-		enabled: Boolean(username),
+		// Search counts (5 reqs/profile) are only reliable authenticated;
+		// hide them for anonymous users instead of burning the 10 req/min
+		// unauthenticated search quota on requests that fail.
+		enabled: Boolean(username && token),
 	});
 }
 
@@ -125,6 +128,8 @@ export function useAllTimeMergedPRs(username: string | undefined) {
 	return useQuery({
 		queryKey: [ALL_TIME_PRS_QUERY_KEY, username, token ? "authed" : "anon"],
 		queryFn: () => getAllTimeMergedPRs(username as string, 10, token),
-		enabled: Boolean(username),
+		// All-time PR search is auth-only; anonymous users see the recent
+		// public-events window instead.
+		enabled: Boolean(username && token),
 	});
 }
