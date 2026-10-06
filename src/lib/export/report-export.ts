@@ -34,13 +34,17 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 	}
 	const wrapper = document.createElement("div");
 	wrapper.className = "pdf-export-surface";
+	wrapper.setAttribute("aria-hidden", "true");
 	wrapper.style.cssText = [
 		"position:fixed",
 		"top:0",
-		"left:-10000px",
+		"left:0",
 		`width:${source.offsetWidth + EXPORT_HORIZONTAL_PADDING * 2}px`,
 		`padding:0 ${EXPORT_HORIZONTAL_PADDING}px`,
 		"background:#ffffff",
+		"opacity:0",
+		"pointer-events:none",
+		"z-index:-1",
 	].join(";");
 	const clone = source.cloneNode(true) as HTMLElement;
 	clone.style.width = `${source.offsetWidth}px`;
