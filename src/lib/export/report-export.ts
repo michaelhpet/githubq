@@ -46,6 +46,13 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 		"pointer-events:none",
 		"z-index:-1",
 	].join(";");
+	const root = document.documentElement;
+	const wasDark = root.classList.contains("dark");
+	const prevOpacity = root.style.opacity;
+	if (wasDark) {
+		root.classList.remove("dark");
+		root.style.opacity = "0";
+	}
 	const clone = source.cloneNode(true) as HTMLElement;
 	clone.style.width = `${source.offsetWidth}px`;
 	const liveImages = source.querySelectorAll("img");
@@ -124,5 +131,9 @@ export async function exportReportAsPdf(username: string): Promise<void> {
 		throw lastError instanceof Error ? lastError : new Error("PDF export failed");
 	} finally {
 		wrapper.remove();
+		if (wasDark) {
+			root.classList.add("dark");
+			root.style.opacity = prevOpacity;
+		}
 	}
 }
