@@ -14,7 +14,7 @@ function AuthNotice() {
 			className="flex flex-col gap-2 rounded-lg border border-stroke bg-background p-3 sm:flex-row sm:items-center sm:justify-between print:hidden"
 		>
 			<p className="text-sm font-medium">
-				Please login with GitHub for exhaustive metrics
+				Please login with GitHub for more queries and exhaustive metrics
 			</p>
 			<button
 				type="button"

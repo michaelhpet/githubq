@@ -23,7 +23,7 @@ export function Home() {
 					Audit GitHub Profiles Quickly!
 				</h1>
 				<p className="max-w-2xl text-2xl">
-					Create and export a comprehensive report of a developer&apos;s GitHub
+					View and export a comprehensive report of a developer&apos;s GitHub
 					activities, frequency of work, languages used, other important stuff.
 				</p>
 			</article>
