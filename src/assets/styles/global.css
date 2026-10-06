@@ -42,6 +42,41 @@ body {
 	color: rgb(var(--foreground));
 }
 
+html.exporting,
+html.exporting.dark {
+	--foreground: 30 30 30;
+	--background: 255 255 255;
+	--dark: 229 231 235;
+	--paper: 243 244 246;
+	--stroke: 209 213 219;
+	--accent: 12 140 233;
+	--dim: 105 105 105;
+	--heat-0: 235 237 240;
+	--heat-1: 155 233 168;
+	--heat-2: 64 196 99;
+	--heat-3: 48 161 78;
+	--heat-4: 33 110 57;
+}
+
+html.exporting .print\:hidden {
+	display: none;
+}
+
+html.exporting .print\:grid-cols-2 {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+html.exporting .recharts-tooltip-wrapper {
+	display: none !important;
+}
+
+html.exporting *,
+html.exporting *::before,
+html.exporting *::after {
+	animation: none !important;
+	transition: none !important;
+}
+
 @media print {
 	/* Downloads always render in light mode, even with dark mode on. */
 	:root,

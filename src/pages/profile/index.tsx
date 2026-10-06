@@ -36,7 +36,7 @@ export function Profile() {
 	];
 
 	return (
-		<div className="flex flex-col">
+		<div className="flex flex-col" data-export-root>
 			<div className="px-4 pt-4">
 				<AuthNotice />
 			</div>

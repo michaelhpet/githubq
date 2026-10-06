@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/button";
 import { Skeleton } from "@/components/skeleton";
 import { Tag } from "@/components/tag";
 import { useProfile } from "@/lib/api/get-profile";
+import { exportReportAsPdf } from "@/lib/export/report-export";
 import { clearPersistedCache } from "@/lib/query-client";
 
 export function Developer() {
 	const { username } = useParams();
 	const queryClient = useQueryClient();
 	const { data, isLoading, isError, error } = useProfile(username);
+	const [downloading, setDownloading] = useState(false);
 
 	if (isLoading) return <DeveloperSkeleton />;
 
@@ -17,6 +20,18 @@ export function Developer() {
 		await queryClient.cancelQueries();
 		queryClient.removeQueries();
 		await clearPersistedCache();
+	}
+
+	async function download(): Promise<void> {
+		if (downloading) return;
+		setDownloading(true);
+		try {
+			await exportReportAsPdf(username ?? "github-report");
+		} catch {
+			window.print();
+		} finally {
+			setDownloading(false);
+		}
 	}
 
 	return (
@@ -50,7 +65,9 @@ export function Developer() {
 				<Button variant="outlined" onClick={() => void auditAgain()}>
 					Audit again
 				</Button>
-				<Button onClick={() => window.print()}>Download</Button>
+				<Button onClick={() => void download()}>
+					{downloading ? "Preparing…" : "Download"}
+				</Button>
 			</div>
 		</div>
 	);
