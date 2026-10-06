@@ -1,4 +1,7 @@
+import { Link, useParams } from "react-router-dom";
 import { Tag } from "@/components/tag";
+import { GitHubApiError } from "@/lib/api/client";
+import { useProfile } from "@/lib/api/get-profile";
 import { useSession } from "@/lib/auth/session";
 import { Activity } from "./activity";
 import { Developer } from "./developer";
@@ -28,12 +31,33 @@ function AuthNotice() {
 }
 
 export function Profile() {
+	const { username } = useParams();
+	const { isLoading, isError, error } = useProfile(username);
+	const notFound =
+		isError && error instanceof GitHubApiError && error.status === 404;
 	const SECTIONS = [
 		{ id: "profile", component: <Developer /> },
 		{ id: "work", label: "Work", component: <Activity /> },
 		{ id: "leadership", label: "Leadership", component: <Leadership /> },
 		{ id: "repos", label: "Top repositories", component: <Repositories /> },
 	];
+
+	if (!isLoading && notFound) {
+		return (
+			<div className="flex flex-col" data-export-root>
+				<div className="flex min-h-[calc(100vh-128px)] flex-col items-center justify-center gap-2 p-4 text-center">
+					<p className="text-2xl font-bold">User not found</p>
+					<p className="text-sm text-dim">
+						There is no GitHub user named{" "}
+						<span className="font-medium">{username}</span>.
+					</p>
+					<Link to="/" className="text-sm font-medium hover:underline">
+						Audit another profile
+					</Link>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex flex-col" data-export-root>
